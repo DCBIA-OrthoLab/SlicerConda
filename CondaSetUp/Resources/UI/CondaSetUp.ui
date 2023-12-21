@@ -278,13 +278,6 @@
         </property>
        </widget>
       </item>
-      <item row="13" column="0">
-       <widget class="QPushButton" name="testButton">
-        <property name="text">
-         <string>test</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>

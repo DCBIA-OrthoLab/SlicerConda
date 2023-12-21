@@ -181,7 +181,6 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.installButton.connect("clicked(bool)", self.installMiniconda)
         self.ui.CreateEnvButton.connect("clicked(bool)", self.createEnv)
         self.ui.deletePushButton.connect("clicked(bool)",self.deleteEnv)
-        self.ui.testButton.connect("clicked(bool)",self.testPerso)
 
         #Hidden
         self.ui.TestEnvResultlabel.setHidden(True)
@@ -364,7 +363,6 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def restoreCondaPath(self):
         condaPath = self.conda.getCondaPath()
-        print("condaPath de restore : ",condaPath)
         if condaPath:
             self.ui.lineEditPathFolder.setText(condaPath)
 
@@ -387,16 +385,6 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
 
 
-    def testPerso(self):
-        self.settings = qt.QSettings("SlicerConda")
-        self.settings.remove("condaPath")
-        self.settings.remove("conda/executable")
-        self.settings.remove("activate/executable")
-        # print("heyhey")
-        result = self.conda.condaRun("shapeAxi",['python','/home/luciacev/Desktop/SlicerDentalModelSeg/CrownSegmentation/test.py'])
-        print(result)
-        result = self.conda.condaInstallLibEnv("test",["vtk","itk"])
-        print(result)
 
         
 
