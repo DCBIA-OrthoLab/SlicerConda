@@ -304,17 +304,21 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 name_file = "tempo.txt"
                 original_stdin = sys.stdin
                 sys.stdin = DummyFile()
-                print()
                 process = multiprocessing.Process(target=self.conda.condaCreateEnv, args=(name,python_version,lib_list,name_file,True))
                 process.start()
                 with open(name_file, "w") as fichier:
                     fichier.write("0\n")
                 line = "Start"
                 self.ui.CreateEnvprogressBar.setHidden(False)
+                work = False
                 while "end" not in line:
                     with open(name_file, "r") as fichier:
                         line = fichier.read()
                     if "end" in line:
+                        os.remove(name_file)
+                        work = True
+                        break
+                    elif "Path to conda no setup" in line:
                         os.remove(name_file)
                         break
                     else:
@@ -326,8 +330,13 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         except : 
                             pass
 
-                self.ui.CreateEnvprogressBar.setValue(100)
-                self.ui.CreateEnvprogressBar.setFormat(f"100%")
+                if work :
+                    self.ui.CreateEnvprogressBar.setValue(100)
+                    self.ui.CreateEnvprogressBar.setFormat(f"100%")
+                else : 
+                    self.ui.CreateEnvprogressBar.setValue(0)
+                    self.ui.CreateEnvprogressBar.setFormat(f"Path to conda no setup")
+                    slicer.util.infoDisplay("Enter a path into 'Miniconda/Anaconda Path'",windowTitle="Can't found conda path")
                 sys.stdin = original_stdin
                 
 
@@ -343,6 +352,10 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             elif result == "Not exist":
                 self.ui.resultDeleteLabel.setText(f"The environment {name} doesn't exist")
                 self.ui.resultDeleteLabel.setStyleSheet("color: red;")
+            elif result == "Path to conda no setup":
+                self.ui.resultDeleteLabel.setText(f"Path to conda no setup")
+                self.ui.resultDeleteLabel.setStyleSheet("color: red;")
+                slicer.util.infoDisplay("Enter a path into 'Miniconda/Anaconda Path'",windowTitle="Can't found conda path")
             else :
                 self.ui.resultDeleteLabel.setText(f"An error occured")
                 self.ui.resultDeleteLabel.setStyleSheet("color: red;")
@@ -351,6 +364,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def restoreCondaPath(self):
         condaPath = self.conda.getCondaPath()
+        print("condaPath de restore : ",condaPath)
         if condaPath:
             self.ui.lineEditPathFolder.setText(condaPath)
 
@@ -360,7 +374,12 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if name :
             result = self.conda.condaTestEnv(name)
             self.ui.TestEnvResultlabel.setHidden(False)
-            if result : 
+            if result == "Path to conda no setup":
+                self.ui.TestEnvResultlabel.setStyleSheet("color: red;")
+                self.ui.TestEnvResultlabel.setText(f"Path to conda no setup")
+                slicer.util.infoDisplay("Enter a path into 'Miniconda/Anaconda Path'",windowTitle="Can't found conda path")
+
+            elif result : 
                 self.ui.TestEnvResultlabel.setStyleSheet("color: green;")
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} exists.")
             else : 
@@ -369,6 +388,10 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     def testPerso(self):
+        self.settings = qt.QSettings("SlicerConda")
+        self.settings.remove("condaPath")
+        self.settings.remove("conda/executable")
+        self.settings.remove("activate/executable")
         # print("heyhey")
         result = self.conda.condaRun("shapeAxi",['python','/home/luciacev/Desktop/SlicerDentalModelSeg/CrownSegmentation/test.py'])
         print(result)
@@ -419,6 +442,9 @@ class CondaSetUpCall():
         '''
 
         path_conda = self.getCondaExecutable()
+        if path_conda=="None":
+                return "Path to conda no setup"
+        
         command_to_execute = [path_conda, "info", "--envs"]
 
         result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env = slicer.util.startupEnvironment())
@@ -539,34 +565,41 @@ class CondaSetUpCall():
 
     def condaCreateEnv(self,name,python_version,list_lib,tempo_file="tempo.txt",writeProgress=False):
         path_conda = self.getCondaExecutable()
-        if writeProgress : self.writeFile(tempo_file,"10")
-        command_to_execute = [path_conda, "create", "--name", name, f"python={python_version}", "-y"]  
-        result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
+        if path_conda=="None":
+                if writeProgress : self.writeFile(tempo_file,"Path to conda no setup")
+        else :
+            if writeProgress : self.writeFile(tempo_file,"10")
+            command_to_execute = [path_conda, "create", "--name", name, f"python={python_version}", "-y"]  
+            result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
 
-        if writeProgress : self.writeFile(tempo_file,"30")
+            if writeProgress : self.writeFile(tempo_file,"40")
 
-        self.condaInstallLibEnv(name,list_lib)
+            self.condaInstallLibEnv(name,list_lib)
 
-        if writeProgress : self.writeFile(tempo_file,"100")
-        if writeProgress : self.writeFile(tempo_file,"end")
+            if writeProgress : self.writeFile(tempo_file,"100")
+            if writeProgress : self.writeFile(tempo_file,"end")
 
     def condaInstallLibEnv(self,name,requirements: list[str]):
         path_activate = self.getActivateExecutable()
-        command = f"source {path_activate} {name} && pip install"
-        for lib in requirements :
-            command = command+ " "+lib
-        print("command : ",command)
-        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
-        if result.returncode==0:
-            return (f"Result : {result.stdout}")
+        if path_activate=="None":
+                return "Path to conda no setup"
         else :
-            return (f"Error : {result.stderr}")
+            command = f"source {path_activate} {name} && pip install"
+            for lib in requirements :
+                command = command+ " "+lib
+            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
+            if result.returncode==0:
+                return (f"Result : {result.stdout}")
+            else :
+                return (f"Error : {result.stderr}")
 
 
     def condaDeleteEnv(self,name:str):
         exist = self.condaTestEnv(name)
-        if exist :
+        if exist:
             path_conda = self.getCondaExecutable()
+            if path_conda=="None":
+                return "Path to conda no setup"
             command_to_execute = [path_conda, "env", "remove","--name", name]  
             result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
             if result.returncode == 0:
@@ -577,7 +610,10 @@ class CondaSetUpCall():
         return "Not exist"
     
     def condaRun(self,env_name: str, command: list[str]):
-        command = [self.getCondaExecutable(), 'run', '-n', env_name, *command]
+        path_conda = self.getCondaExecutable()
+        if path_conda=="None":
+            return "Path to conda no setup"
+        command = [path_conda, 'run', '-n', env_name, *command]
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
         if result.returncode == 0:
             return (f"Result: {result.stdout}")
