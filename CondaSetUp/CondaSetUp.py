@@ -181,6 +181,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.installButton.connect("clicked(bool)", self.installMiniconda)
         self.ui.CreateEnvButton.connect("clicked(bool)", self.createEnv)
         self.ui.deletePushButton.connect("clicked(bool)",self.deleteEnv)
+        self.ui.testButton.connect("clicked(bool)",self.testPerso)
 
         #Hidden
         self.ui.TestEnvResultlabel.setHidden(True)
@@ -331,6 +332,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 
 
     def deleteEnv(self):
+        self.ui.resultDeleteLabel.setHidden(True)
         name = self.ui.deleteLineEdit.text
         if name : 
             result = self.conda.condaDeleteEnv(name)
@@ -353,6 +355,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.lineEditPathFolder.setText(condaPath)
 
     def testEnv(self):
+        self.ui.TestEnvResultlabel.setHidden(True)
         name = self.ui.TestEnvlineEdit.text
         if name :
             result = self.conda.condaTestEnv(name)
@@ -363,6 +366,14 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else : 
                 self.ui.TestEnvResultlabel.setStyleSheet("color: red;")
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
+
+
+    def testPerso(self):
+        # print("heyhey")
+        result = self.conda.condaRun("shapeAxi",['python','/home/luciacev/Desktop/SlicerDentalModelSeg/CrownSegmentation/test.py'])
+        print(result)
+        result = self.conda.condaInstallLibEnv("test",["vtk","itk"])
+        print(result)
 
         
 
@@ -534,28 +545,23 @@ class CondaSetUpCall():
 
         if writeProgress : self.writeFile(tempo_file,"30")
 
-        path_activate = self.getActivateExecutable()
-        install_commands = []
-        if len(list_lib)!=0:
-            for lib in list_lib:
-                install_commands.append(f"source {path_activate} {name} && pip install {lib}")
-                
-        nmb=0
-        print("install command : ",install_commands)
-        for command in install_commands:
-            nmb+=1
-            print("command : ",command)
-            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
-            if writeProgress : self.writeFile(tempo_file,str(30+70*nmb/len(install_commands)))
-            if result.returncode == 0:
-                print(f"Successfully command executed : {command}")
-                print(result.stdout)
-            else:
-                print(f"Failed to execute command : {command}")
-                print(result.stderr)
+        self.condaInstallLibEnv(name,list_lib)
 
         if writeProgress : self.writeFile(tempo_file,"100")
         if writeProgress : self.writeFile(tempo_file,"end")
+
+    def condaInstallLibEnv(self,name,requirements: list[str]):
+        path_activate = self.getActivateExecutable()
+        command = f"source {path_activate} {name} && pip install"
+        for lib in requirements :
+            command = command+ " "+lib
+        print("command : ",command)
+        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
+        if result.returncode==0:
+            return (f"Result : {result.stdout}")
+        else :
+            return (f"Error : {result.stderr}")
+
 
     def condaDeleteEnv(self,name:str):
         exist = self.condaTestEnv(name)
@@ -569,6 +575,16 @@ class CondaSetUpCall():
                 print(result.stderr)
                 return "Error"
         return "Not exist"
+    
+    def condaRun(self,env_name: str, command: list[str]):
+        command = [self.getCondaExecutable(), 'run', '-n', env_name, *command]
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
+        if result.returncode == 0:
+            return (f"Result: {result.stdout}")
+        else :
+            return (f"Error: {result.stderr}")
+        
+
     
 
 
