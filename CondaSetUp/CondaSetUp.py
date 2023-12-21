@@ -575,7 +575,7 @@ class CondaSetUpCall():
             command = f"source {path_activate} {name} && pip install"
             for lib in requirements :
                 command = command+ " "+lib
-            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
+            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment())
             if result.returncode==0:
                 return (f"Result : {result.stdout}")
             else :
@@ -597,12 +597,29 @@ class CondaSetUpCall():
                 return "Error"
         return "Not exist"
     
-    def condaRun(self,env_name: str, command: list[str]):
+    def condaRunFile(self,env_name: str, command: list[str]):
         path_conda = self.getCondaExecutable()
         if path_conda=="None":
             return "Path to conda no setup"
         command = [path_conda, 'run', '-n', env_name, *command]
+        print("command dans conda run : ",command)
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
+        if result.returncode == 0:
+            return (f"Result: {result.stdout}")
+        else :
+            return (f"Error: {result.stderr}")
+        
+    def condaRunCommand(self,env_name: str, command: list[str]):
+        path_activate = self.getActivateExecutable()
+        if path_activate=="None":
+            return "Path to conda no setup"
+        
+        command_execute = f"source {path_activate} {env_name} &&"
+        for com in command :
+            command_execute = command_execute+ " "+com
+
+        print("command_execute dans conda run : ",command_execute)
+        result = subprocess.run(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
         if result.returncode == 0:
             return (f"Result: {result.stdout}")
         else :
