@@ -17,11 +17,13 @@ from slicer.parameterNodeWrapper import (
 import sys
 import io
 import platform
-import qt
+# import qt
 import subprocess
 import shutil
 import urllib
 import multiprocessing
+from qt import (QFileDialog,QSettings)
+import threading
 # from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog
 # from PyQt5.QtCore import QSettings
 #
@@ -250,13 +252,13 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     def chooseCondaFolder(self):
-        surface_folder = qt.QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
+        surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
         self.ui.lineEditPathFolder.setText(surface_folder)
         if surface_folder:
             self.conda.setConda(surface_folder)
 
     def chooseInstallFolder(self):
-        surface_folder = qt.QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
+        surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
         self.ui.folderInstallLineEdit.setText(surface_folder)
 
     def installMiniconda(self):
@@ -290,6 +292,55 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             sys.stdin = original_stdin
 
         
+    # def createEnv(self):
+    #     name = self.ui.lineEdit_nameEnv.text
+    #     if name :
+    #         python_version = self.ui.lineEditPythonVersion.text
+    #         if python_version :
+    #             lib_list = self.ui.lineEditLib.text
+    #             if lib_list : 
+    #                 lib_list = lib_list.split(',')
+    #             else : 
+    #                 lib_list = []
+    #             name_file = "tempo.txt"
+    #             original_stdin = sys.stdin
+    #             sys.stdin = DummyFile()
+    #             process = multiprocessing.Process(target=self.conda.condaCreateEnv, args=(name,python_version,lib_list,name_file,True))
+    #             process.start()
+    #             with open(name_file, "w") as fichier:
+    #                 fichier.write("0\n")
+    #             line = "Start"
+    #             self.ui.CreateEnvprogressBar.setHidden(False)
+    #             work = False
+    #             while "end" not in line:
+    #                 with open(name_file, "r") as fichier:
+    #                     line = fichier.read()
+    #                 if "end" in line:
+    #                     os.remove(name_file)
+    #                     work = True
+    #                     break
+    #                 elif "Path to conda no setup" in line:
+    #                     os.remove(name_file)
+    #                     break
+    #                 else:
+    #                     slicer.app.processEvents()
+    #                     line.replace("\n","")
+    #                     try : 
+    #                         self.ui.CreateEnvprogressBar.setValue(int(line))
+    #                         self.ui.CreateEnvprogressBar.setFormat(f"{int(line)}%")
+    #                     except : 
+    #                         pass
+
+    #             if work :
+    #                 self.ui.CreateEnvprogressBar.setValue(100)
+    #                 self.ui.CreateEnvprogressBar.setFormat(f"100%")
+    #             else : 
+    #                 self.ui.CreateEnvprogressBar.setValue(0)
+    #                 self.ui.CreateEnvprogressBar.setFormat(f"Path to conda no setup")
+    #                 slicer.util.infoDisplay("Enter a path into 'Miniconda/Anaconda Path'",windowTitle="Can't found conda path")
+    #             sys.stdin = original_stdin
+    
+    
     def createEnv(self):
         name = self.ui.lineEdit_nameEnv.text
         if name :
@@ -300,24 +351,27 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     lib_list = lib_list.split(',')
                 else : 
                     lib_list = []
+                print("lib_list : ",lib_list)
                 name_file = "tempo.txt"
                 original_stdin = sys.stdin
                 sys.stdin = DummyFile()
-                process = multiprocessing.Process(target=self.conda.condaCreateEnv, args=(name,python_version,lib_list,name_file,True))
+                process = threading.Thread(target=self.conda.condaCreateEnv, args=(name,"3.9",lib_list,name_file,True,))
                 process.start()
                 with open(name_file, "w") as fichier:
                     fichier.write("0\n")
                 line = "Start"
                 self.ui.CreateEnvprogressBar.setHidden(False)
                 work = False
-                while "end" not in line:
+                while True:
                     with open(name_file, "r") as fichier:
                         line = fichier.read()
                     if "end" in line:
+                        print("line : ",line)
                         os.remove(name_file)
                         work = True
                         break
                     elif "Path to conda no setup" in line:
+                        print("line : ",line)
                         os.remove(name_file)
                         break
                     else:
@@ -394,14 +448,18 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 class CondaSetUpCall():
     def __init__(self) -> None:
-        self.settings = qt.QSettings("SlicerConda")
+        self.settings = QSettings("SlicerConda")
+        
+    def convert_path(self,unix_path):
+        windows_path = unix_path.replace('/', '\\')
+        return windows_path
 
     def setConda(self,pathConda):
         if pathConda:
             self.settings.setValue("condaPath", pathConda)
             if platform.system()=="Windows":
-                self.settings.setValue("conda/executable", os.path.join(self.settings.value("condaPath", ""),"Scripts","conda"))
-                self.settings.setValue("activate/executable",os.path.join(pathConda,"Scripts","activate"))
+                self.settings.setValue("conda/executable", os.path.join(self.convert_path(pathConda),"Scripts","conda"))
+                self.settings.setValue("activate/executable",os.path.join(self.convert_path(pathConda),"Scripts","activate"))
             else : 
                 self.settings.setValue("conda/executable",os.path.join(self.settings.value("condaPath", ""),"bin","conda"))
                 self.settings.setValue("activate/executable",os.path.join(pathConda,"bin","activate"))
@@ -557,29 +615,44 @@ class CondaSetUpCall():
                 if writeProgress : self.writeFile(tempo_file,"Path to conda no setup")
         else :
             if writeProgress : self.writeFile(tempo_file,"10")
-            command_to_execute = [path_conda, "create", "--name", name, f"python={python_version}", "-y"]  
+            command_to_execute = [path_conda, "create", "--name", name, f"python={python_version}", "-y"] 
+            print("command_to_execute in conda create env : ",command_to_execute) 
             result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
 
             if writeProgress : self.writeFile(tempo_file,"40")
 
             self.condaInstallLibEnv(name,list_lib)
+            print("OUIIIIIIIIIIIIIIIII")
 
             if writeProgress : self.writeFile(tempo_file,"100")
             if writeProgress : self.writeFile(tempo_file,"end")
+        
 
     def condaInstallLibEnv(self,name,requirements: list[str]):
+        print("requirements : ",requirements)
         path_activate = self.getActivateExecutable()
+        path_conda = self.getCondaPath()
         if path_activate=="None":
                 return "Path to conda no setup"
         else :
-            command = f"source {path_activate} {name} && pip install"
-            for lib in requirements :
-                command = command+ " "+lib
-            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment())
-            if result.returncode==0:
-                return (f"Result : {result.stdout}")
-            else :
-                return (f"Error : {result.stderr}")
+            if len(requirements)!=0 :
+                if platform.system()=="Windows":
+                    path_pip = os.path.join(self.convert_path(path_conda),"envs",name,"Scripts","pip")
+                    command = f"conda activate {name} && {path_pip} install"
+                else :
+                    command = f"source {path_activate} {name} && pip install"
+                    
+                for lib in requirements :
+                    command = command+ " "+lib
+                print("command in condainstalllibEnv : ",command)
+                result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment())
+                if result.returncode==0:
+                    print(f"Result : {result.stdout}")
+                    return (f"Result : {result.stdout}")
+                else :
+                    print(f"Error : {result.stderr}")
+                    return (f"Error : {result.stderr}")
+            return "Nothing to install"
 
 
     def condaDeleteEnv(self,name:str):
