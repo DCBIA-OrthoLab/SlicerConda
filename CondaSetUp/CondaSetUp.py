@@ -470,8 +470,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else : 
                 self.ui.TestEnvResultlabel.setStyleSheet("color: red;")
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
-        print(self.conda.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py'],))
-        print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
+        # print(self.conda.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py'],))
+        # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
 
 
 
