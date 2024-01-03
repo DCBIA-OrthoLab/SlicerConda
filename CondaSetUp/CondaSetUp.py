@@ -189,7 +189,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.checkBoxWsl.stateChanged.connect(self.checkboxChangeWsl)
 
         self.ui.checkBoxWsl.setHidden(True)
-        if platform.system == "Windows":
+        if platform.system() == "Windows":
             self.ui.checkBoxWsl.setHidden(False)
         #Hidden
         self.ui.TestEnvResultlabel.setHidden(True)
