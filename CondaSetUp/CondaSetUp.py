@@ -173,6 +173,9 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         self.conda = CondaSetUpCall()
+        
+        if platform.system() == "Windows" :
+            self.conda_wsl = CondaSetUpCallWsl()
 
         self.ui.outputsCollapsibleButton.setText("Installation miniconda3")
 
@@ -472,12 +475,49 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
         # print(self.conda.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py'],))
         # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
+        
+        print("Let's goooo")
+        print(self.conda_wsl.installCondaWsl())
+        
+        
 
 
 
         
 
+class CondaSetUpCallWsl():
+    def __init__(self) -> None:
+        self.setting = QSettings("SlicerCondaWSL")
+        
+    def installCondaWsl(self):
+        '''
+        Install miniconda3 on wsl
+        '''
+        try:
+            # Download executable of miniconda3 for linux
+            subprocess.check_call(["wsl", "--","wget", "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"])
 
+            # Makes the installer executable
+            subprocess.check_call(["wsl", "--","chmod", "+x", "Miniconda3-latest-Linux-x86_64.sh"])
+
+            # Execution of the installer
+            subprocess.check_call(["wsl","--","bash", "Miniconda3-latest-Linux-x86_64.sh", "-b","-p", "~/miniconda3"])
+
+            # Delete installer
+            subprocess.check_call(["wsl","--", "rm", "Miniconda3-latest-Linux-x86_64.sh"])
+            
+            subprocess.check_call(["wsl", "--", "bash", "-c", "echo 'export PATH=\"$HOME/miniconda3/bin:$PATH\"' >> ~/.bashrc"])
+
+            
+            subprocess.check_call(["wsl", "--", "bash", "-c", "source ~/.bashrc"])
+            
+            command = f"wsl -- bash -c \"~/miniconda3/bin/pip install rpyc\""
+            subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace')
+
+            return ("Miniconda has been successfully installed on WSL.")
+            
+        except subprocess.CalledProcessError as e:
+            return (f"An error occurred when installing Miniconda on WSL: {e}")
         
     
 
