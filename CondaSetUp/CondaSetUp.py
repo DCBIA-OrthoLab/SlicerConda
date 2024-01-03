@@ -269,25 +269,51 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             original_stdin = sys.stdin
             sys.stdin = DummyFile()
-            process = multiprocessing.Process(target=self.conda.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
+            # process = multiprocessing.Process(target=self.conda.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
+            # process.start()
+            original_stdin = sys.stdin
+            sys.stdin = DummyFile()
+            process = threading.Thread(target=self.conda.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
             process.start()
             line = "Start"
             self.ui.progressBarInstallation.setHidden(False)
 
-            while "end" not in line:
-                with open(name_file, "r") as fichier:
-                    line = fichier.read()
-                if "end" in line:
-                    os.remove(name_file)
-                    break
-                else:
-                    slicer.app.processEvents()
-                    line.replace("\n","")
-                    try : 
-                        self.ui.progressBarInstallation.setValue(int(line))
-                        self.ui.progressBarInstallation.setFormat(f"{int(line)}%")
-                    except : 
-                        pass
+            # while "end" not in line:
+            #     with open(name_file, "r") as fichier:
+            #         line = fichier.read()
+            #     if "end" in line:
+            #         os.remove(name_file)
+            #         break
+            #     else:
+            #         slicer.app.processEvents()
+            #         line.replace("\n","")
+            #         try : 
+            #             self.ui.progressBarInstallation.setValue(int(line))
+            #             self.ui.progressBarInstallation.setFormat(f"{int(line)}%")
+            #         except : 
+            #             pass
+                    
+            while process.is_alive():
+                    with open(name_file, "r") as fichier:
+                        line = fichier.read()
+                    if "end" in line:
+                        print("line : ",line)
+                        break
+                    else:
+                        slicer.app.processEvents()
+                        line.replace("\n","")
+                        try : 
+                            self.ui.progressBarInstallation.setValue(int(line))
+                            self.ui.progressBarInstallation.setFormat(f"{int(line)}%")
+                        except : 
+                            pass
+                        
+            with open(name_file, "r") as fichier:
+                line = fichier.read()
+            if "end" in line:
+                print("line : ",line)
+                os.remove(name_file)
+
 
             sys.stdin = original_stdin
 
@@ -362,12 +388,12 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 line = "Start"
                 self.ui.CreateEnvprogressBar.setHidden(False)
                 work = False
-                while True:
+                while process.is_alive():
                     with open(name_file, "r") as fichier:
                         line = fichier.read()
                     if "end" in line:
                         print("line : ",line)
-                        os.remove(name_file)
+                        # os.remove(name_file)
                         work = True
                         break
                     elif "Path to conda no setup" in line:
@@ -382,7 +408,14 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                             self.ui.CreateEnvprogressBar.setFormat(f"{int(line)}%")
                         except : 
                             pass
-
+                        
+                with open(name_file, "r") as fichier:
+                        line = fichier.read()
+                if "end" in line:
+                    print("line : ",line)
+                    os.remove(name_file)
+                    work = True
+                    
                 if work :
                     self.ui.CreateEnvprogressBar.setValue(100)
                     self.ui.CreateEnvprogressBar.setFormat(f"100%")
@@ -437,6 +470,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else : 
                 self.ui.TestEnvResultlabel.setStyleSheet("color: red;")
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
+        print(self.conda.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py'],))
+        print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
 
 
 
@@ -543,6 +578,7 @@ class CondaSetUpCall():
 
         if system == "Windows":
             try:
+                path_install = self.convert_path(path_install)
                 path_exe = os.path.join(os.path.expanduser("~"), "tempo")
        
                 os.makedirs(path_exe, exist_ok=True)
@@ -557,7 +593,6 @@ class CondaSetUpCall():
                 # Run the Anaconda installer with silent mode
                 print("path_installer : ",path_installer)
                 print("path_install : ",path_install)
-                path_miniconda = os.path.join(path_install,"miniconda")
 
                 # Commande pour une installation silencieuse avec Miniconda
                 install_command = f'"{path_installer}" /InstallationType=JustMe /AddToPath=1 /RegisterPython=0 /S /D={path_install}'
@@ -622,7 +657,6 @@ class CondaSetUpCall():
             if writeProgress : self.writeFile(tempo_file,"40")
 
             self.condaInstallLibEnv(name,list_lib)
-            print("OUIIIIIIIIIIIIIIIII")
 
             if writeProgress : self.writeFile(tempo_file,"100")
             if writeProgress : self.writeFile(tempo_file,"end")
@@ -644,7 +678,6 @@ class CondaSetUpCall():
                     
                 for lib in requirements :
                     command = command+ " "+lib
-                print("command in condainstalllibEnv : ",command)
                 result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment())
                 if result.returncode==0:
                     print(f"Result : {result.stdout}")
@@ -671,11 +704,19 @@ class CondaSetUpCall():
         return "Not exist"
     
     def condaRunFile(self,env_name: str, command: list[str]):
-        path_conda = self.getCondaExecutable()
-        if path_conda=="None":
+        path_condaexe = self.getCondaExecutable()
+        path_conda = self.getCondaPath()
+        
+        if path_condaexe=="None":
             return "Path to conda no setup"
-        command = [path_conda, 'run', '-n', env_name, *command]
-        print("command dans conda run : ",command)
+        if not self.condaTestEnv(env_name) :
+            return "Env doesn't exist"
+        if platform.system()=="Windows" :
+            path_python = os.path.join(self.convert_path(path_conda),"envs",env_name,"python")
+            command = [path_condaexe, 'run', '-n', env_name, path_python, *command]
+        else :
+            command = [path_conda, 'run', '-n', env_name, *command]
+            
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
         if result.returncode == 0:
             return (f"Result: {result.stdout}")
