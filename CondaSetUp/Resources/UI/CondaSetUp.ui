@@ -17,14 +17,14 @@
       <string>Inputs</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
-      <item row="1" column="0">
-       <widget class="QLabel" name="label">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_1">
         <property name="text">
          <string>Miniconda/Anaconda Path :</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
          <widget class="QLineEdit" name="lineEditPathFolder"/>
@@ -40,6 +40,13 @@
          <layout class="QHBoxLayout" name="horizontalLayout_6"/>
         </item>
        </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="checkBoxWsl">
+        <property name="text">
+         <string>WSL</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

@@ -186,7 +186,11 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.installButton.connect("clicked(bool)", self.installMiniconda)
         self.ui.CreateEnvButton.connect("clicked(bool)", self.createEnv)
         self.ui.deletePushButton.connect("clicked(bool)",self.deleteEnv)
+        self.ui.checkBoxWsl.stateChanged.connect(self.checkboxChangeWsl)
 
+        self.ui.checkBoxWsl.setHidden(True)
+        if platform.system == "Windows":
+            self.ui.checkBoxWsl.setHidden(False)
         #Hidden
         self.ui.TestEnvResultlabel.setHidden(True)
         self.ui.progressBarInstallation.setHidden(True)
@@ -200,6 +204,29 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+
+    def checkboxChangeWsl(self):
+        if self.ui.checkBoxWsl.isChecked():
+            self.ui.label_1.setText("Miniconda/Anaconda Path in WSL :")
+            self.ui.folderInstallLabel.setText("Folder install in WSL: ")
+            self.ui.installButton.setText("Installation in WSL")
+            self.ui.label_2.setText("Test if environment exist in WSL: ")
+            self.ui.label_2.setStyleSheet("text-decoration: underline;")
+            self.ui.label_3.setText("Create environment in WSL :")
+            self.ui.label_3.setStyleSheet("text-decoration: underline;")
+            self.ui.label_6.setText("Delete environment in WSL :")
+            self.ui.label_6.setStyleSheet("text-decoration: underline;")
+        else : 
+            self.ui.label_1.setText("Miniconda/Anaconda Path :")
+            self.ui.folderInstallLabel.setText("Folder install : ")
+            self.ui.installButton.setText("Installation")
+            self.ui.label_2.setText("Test if environment exist : ")
+            self.ui.label_2.setStyleSheet("text-decoration: underline;")
+            self.ui.label_3.setText("Create environment :")
+            self.ui.label_3.setStyleSheet("text-decoration: underline;")
+            self.ui.label_6.setText("Delete environment :")
+            self.ui.label_6.setStyleSheet("text-decoration: underline;")
+
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
