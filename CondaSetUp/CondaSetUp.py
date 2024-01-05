@@ -600,49 +600,6 @@ class CondaSetUpCallWsl():
         Install miniconda3 on wsl
         '''
         try:
-            print("folder : ",folder)
-            # if writeProgress : self.writeFile(file_name,"10")
-            # # Download executable of miniconda3 for linux
-            # subprocess.check_call(["wsl", "--","wget", "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"])
-            # if writeProgress : self.writeFile(file_name,"20")
-
-            # # Makes the installer executable
-            # subprocess.check_call(["wsl", "--","chmod", "+x", "Miniconda3-latest-Linux-x86_64.sh"])
-            # if writeProgress : self.writeFile(file_name,"30")
-
-            # # Execution of the installer
-            # print("*"*150)
-            # command_old = ["wsl","--","bash", "Miniconda3-latest-Linux-x86_64.sh", "-b","-p", "~/miniconda3"]
-            # print("command_old : ",command_old)
-            # command_new = ["wsl","--","bash", "Miniconda3-latest-Linux-x86_64.sh", "-b","-p", f"{folder}/miniconda3"]
-            # print("command_new : ",command_new)
-            # subprocess.check_call(["wsl","--","bash", "Miniconda3-latest-Linux-x86_64.sh", "-b","-p", f"{folder}/miniconda3"])
-            # if writeProgress : self.writeFile(file_name,"50")
-
-            # # Delete installer
-            # subprocess.check_call(["wsl","--", "rm", "Miniconda3-latest-Linux-x86_64.sh"])
-            # if writeProgress : self.writeFile(file_name,"60")
-            
-            # print("*"*150)
-            # command_old = ["wsl", "--", "bash", "-c", "echo 'export PATH=\"$HOME/miniconda3/bin:$PATH\"' >> ~/.bashrc"]
-            # print("command_old : ",command_old)
-            # command_new = ["wsl", "--", "bash", "-c", f"echo 'export PATH=\"{folder}/miniconda3/bin:$PATH\"' >> ~/.bashrc"]
-            # print("command_new : ",command_new)
-            # subprocess.check_call(["wsl", "--", "bash", "-c", f"echo 'export PATH=\"{folder}/miniconda3/bin:$PATH\"' >> ~/.bashrc"])
-            # if writeProgress : self.writeFile(file_name,"80")
-
-            
-            # subprocess.check_call(["wsl", "--", "bash", "-c", "source ~/.bashrc"])
-            # if writeProgress : self.writeFile(file_name,"90")
-            
-            # print("*"*150)
-            # command_old = f"wsl -- bash -c \"~/miniconda3/bin/pip install rpyc\""
-            # print("command_old : ",command_old)
-            # command_new = f"wsl -- bash -c \"{folder}/miniconda3/bin/pip install rpyc\""
-            # print("command_new : ",command_new)
-            # command = f"wsl -- bash -c \"{folder}/miniconda3/bin/pip install rpyc\""
-            # subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace')
-            # if writeProgress : self.writeFile(file_name,"100")
             
             user = self.getUser()
             print("user : ",user)
