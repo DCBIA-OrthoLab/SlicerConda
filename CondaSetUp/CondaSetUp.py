@@ -22,7 +22,7 @@ import subprocess
 import shutil
 import urllib
 import multiprocessing
-from qt import (QFileDialog,QSettings,QDialogButtonBox,QComboBox,QVBoxLayout,QDialog,QLabel)
+from qt import (QFileDialog,QSettings,QDialogButtonBox,QComboBox,QVBoxLayout,QDialog,QLabel,QWidget,QApplication,QListWidget,QPushButton,QLineEdit,QMessageBox,QHBoxLayout)
 import threading
 # from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog
 # from PyQt5.QtCore import QSettings
@@ -162,6 +162,192 @@ class UserSelectorDialog(QDialog, VTKObservationMixin):
 
     def selectedUser(self):
         return self.comboBox.currentText
+    
+class DeselectableListWidget(QListWidget):
+    def mousePressEvent(self, event):
+        item = self.itemAt(event.pos())
+        if not item:
+            self.clearSelection()
+        super().mousePressEvent(event)
+
+class FileManagerWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        
+        self.user = self.initUser()
+        self.currentPath = "/home/"+self.user
+        
+        self.directories = self.getWSLDirectories()
+        self.initUI()
+        
+    def initUser(self):
+        awk_script_path = self.windows_to_linux_path(os.path.join(os.path.dirname(os.path.realpath(__file__)),'test.awk'))
+        command = f'wsl awk -f {awk_script_path} /etc/passwd'
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True)
+        decoded_stdout = result.stdout.decode('utf-8')
+        users = decoded_stdout.strip().split('\n')
+        dialog = UserSelectorDialog(slicer.util.mainWindow())
+        for user in users:
+            dialog.addUser(user)
+
+        if dialog.exec_():
+            selected_user = dialog.selectedUser()
+            print("Selected user:", selected_user)
+            return selected_user
+        return None
+    
+    def windows_to_linux_path(self,windows_path):
+            '''
+        Convert a windows path to a path that wsl can read
+        '''
+            windows_path = windows_path.strip()
+
+            path = windows_path.replace('\\', '/')
+
+            if ':' in path:
+                drive, path_without_drive = path.split(':', 1)
+                path = "/mnt/" + drive.lower() + path_without_drive
+
+            return path
+
+    def initUI(self):
+        
+        
+        self.setWindowTitle("Gestionnaire de Fichiers WSL")
+    
+        # Création du layout principal
+        mainLayout = QVBoxLayout()
+
+        # Layout pour le chemin courant et le bouton "Revenir"
+        pathLayout = QHBoxLayout()
+        self.pathLabel = QLabel(self.currentPath)
+        pathLayout.addWidget(self.pathLabel)
+        pathLayout.addStretch(1)  # Ajoute un espace extensible pour pousser le bouton à droite
+
+        self.backButton = QPushButton("Revenir")
+        self.backButton.clicked.connect(self.navigateUp)
+        pathLayout.addWidget(self.backButton)
+
+        mainLayout.addLayout(pathLayout)
+
+        # Liste des dossiers
+        self.dirListWidget = QListWidget()
+        self.dirListWidget.itemDoubleClicked.connect(self.navigateIntoDirectory)
+        mainLayout.addWidget(self.dirListWidget)
+
+        # Layout pour les boutons d'action et la création de dossiers
+        actionButtonLayout = QHBoxLayout()
+
+        self.deleteButton = QPushButton("Delete folder")
+        self.deleteButton.clicked.connect(self.deleteDirectory)
+        actionButtonLayout.addWidget(self.deleteButton)
+
+        self.createDirButton = QPushButton("Create folder")
+        self.createDirButton.clicked.connect(self.createDirectory)
+        actionButtonLayout.addWidget(self.createDirButton)
+
+        # Layout pour la création de dossiers avec label
+        createFolderLayout = QHBoxLayout()
+        newFolderLabel = QLabel("Name of the new folder:")
+        self.newDirNameEdit = QLineEdit()
+        createFolderLayout.addWidget(newFolderLabel)
+        createFolderLayout.addWidget(self.newDirNameEdit)
+
+        # Ajout du layout de création de dossiers au layout principal
+        mainLayout.addLayout(createFolderLayout)
+
+        self.installButton = QPushButton("Install here")
+        self.installButton.clicked.connect(self.installHere)
+        actionButtonLayout.addWidget(self.installButton)
+
+        # Ajout du layout des boutons au layout principal
+        mainLayout.addLayout(actionButtonLayout)
+
+        # Configuration du layout principal
+        self.setLayout(mainLayout)
+
+        # Mise à jour de l'interface
+        self.refreshDirectories()
+        self.refreshBackButtonState()
+
+    
+    def refreshPathLabel(self):
+        self.pathLabel.setText(self.currentPath)
+        
+    def refreshBackButtonState(self):
+        # Griser le bouton si le chemin actuel est /home/user
+        self.backButton.setEnabled(self.currentPath != "/home/"+self.user)
+
+    def deleteDirectory(self):
+        selectedDir = self.dirListWidget.currentItem()
+        if selectedDir:
+            selectedDirPath = self.currentPath+"/"+selectedDir.text()
+            reply = QMessageBox.question(self, 'Confirmation', 
+                                         f"Are you sure you want to delete this folder : '{selectedDirPath}'?",
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.Yes:
+                try:
+                    command = ["wsl", "--user", self.user, "--", "rm", "-rf", selectedDirPath]
+                    subprocess.check_output(command)
+                    self.refreshDirectories()
+                except subprocess.CalledProcessError as e:
+                    QMessageBox.warning(self, "Error", f"Can't delete the folder : {e}")
+        else:
+            QMessageBox.warning(self, "Erreur", "Veuillez sélectionner un dossier à supprimer.")
+    
+    def getWSLDirectories(self):
+        command = ["wsl", "--user", self.user, "--", "bash", "-c", f"ls -d {self.currentPath}/*/"]
+        try:
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT)
+            directories = [os.path.basename(dir.strip('/')) for dir in result.decode().strip().split('\n') if dir]
+            return directories
+        except subprocess.CalledProcessError as e:
+            error = e.output.decode()
+            if "No such file or directory" in error:
+                return [] 
+            else:
+                print(f"Erreur lors de l'exécution de la commande WSL : {e}")
+                return []
+
+        
+    def navigateIntoDirectory(self, item):
+        self.currentPath = self.currentPath+"/"+ item.text()
+        self.refreshPathLabel()
+        self.refreshDirectories()
+        self.refreshBackButtonState()
+        
+    def navigateUp(self):
+        self.currentPath = os.path.dirname(self.currentPath)
+        self.refreshPathLabel()
+        self.refreshDirectories()
+        self.refreshBackButtonState()
+        
+    def createDirectory(self):
+        newDirName = self.newDirNameEdit.text
+        if newDirName:
+            try:
+                subprocess.check_output(["wsl", "--user", "jeanne", "--", "mkdir", self.currentPath+"/"+newDirName])
+                QMessageBox.information(self, "Succès", f"Dossier '{newDirName}' créé avec succès.")
+                self.refreshDirectories()
+            except subprocess.CalledProcessError as e:
+                QMessageBox.warning(self, "Erreur", f"Impossible de créer le dossier : {e}")
+        else:
+            QMessageBox.warning(self, "Erreur", "Veuillez entrer un nom de dossier.")
+
+    def refreshDirectories(self):
+        self.dirListWidget.clear()
+        self.dirListWidget.addItems(self.getWSLDirectories())
+        self.refreshBackButtonState()
+        
+
+    def installHere(self):
+        selectedDir = self.dirListWidget.currentItem().text()
+        if selectedDir:
+            QMessageBox.information(self, "Installation", f"Installation dans le dossier : {selectedDir}")
+            # Ajoutez ici le code pour installer votre code dans le dossier sélectionné
+        else:
+            QMessageBox.warning(self, "Erreur", "Veuillez sélectionner un dossier.")
 
 
 class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
@@ -531,6 +717,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def testEnv(self):
         self.ui.TestEnvResultlabel.setHidden(True)
         name = self.ui.TestEnvlineEdit.text
+        name = False
         if name :
             result = self.conda.condaTestEnv(name)
             self.ui.TestEnvResultlabel.setHidden(False)
@@ -549,7 +736,9 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
         
         print("Let's goooo")
-        print(self.conda_wsl.installConda())
+        # print(self.conda_wsl.installConda())
+        fileManager = FileManagerWidget()
+        fileManager.show()
         
         
 
