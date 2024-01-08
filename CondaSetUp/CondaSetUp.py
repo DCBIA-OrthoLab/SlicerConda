@@ -624,11 +624,14 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 name_file = "tempo.txt"
                 original_stdin = sys.stdin
                 sys.stdin = DummyFile()
-                process = threading.Thread(target=self.conda.condaCreateEnv, args=(name,"3.9",lib_list,name_file,True,))
-                process.start()
+                if self.ui.checkBoxWsl.isChecked() :
+                    process = threading.Thread(target=self.conda_wsl.condaCreateEnv, args=(name,"3.9",lib_list,name_file,True,))
+                else : 
+                    process = threading.Thread(target=self.conda.condaCreateEnv, args=(name,"3.9",lib_list,name_file,True,))
                 with open(name_file, "w") as fichier:
                     fichier.write("0\n")
                 line = "Start"
+                process.start()
                 self.ui.CreateEnvprogressBar.setHidden(False)
                 work = False
                 while process.is_alive():
@@ -746,8 +749,8 @@ class CondaSetUpCallWsl():
     def setConda(self,pathConda):
         if pathConda:
             self.settings.setValue("condaPath", pathConda)
-            self.settings.setValue("conda/executable",os.path.join(self.settings.value("condaPath", ""),"bin","conda"))
-            self.settings.setValue("activate/executable",os.path.join(pathConda,"bin","activate"))
+            self.settings.setValue("conda/executable",self.settings.value("condaPath", "")+"/bin/conda")
+            self.settings.setValue("activate/executable",pathConda+"/bin/activate")
 
     def getCondaExecutable(self):
         condaExe = self.settings.value("conda/executable", "")
@@ -787,6 +790,22 @@ class CondaSetUpCallWsl():
             
         except subprocess.CalledProcessError as e:
             print (f"An error occurred when installing Miniconda on WSL: {e}")
+            
+    def condaCreateEnv(self,name,python_version,list_lib,tempo_file="tempo.txt",writeProgress=False):
+        user = self.getUser()
+        conda_path = self.getCondaExecutable()
+        command_to_execute = ["wsl", "--user", user,"--","bash","-c", f"{conda_path} create -y -n {name} python={python_version}"]
+        if writeProgress : self.writeFile(tempo_file,"20")
+        print("command to execute : ",command_to_execute)
+        result = subprocess.run(command_to_execute, text=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE,env = slicer.util.startupEnvironment())
+        if result.returncode==0:
+            print("tt vas bien")
+        else :
+            print("error : ",result.stderr)
+            
+        if writeProgress : self.writeFile(tempo_file,"100")
+        if writeProgress : self.writeFile(tempo_file,"end")
+    
         
     
 
