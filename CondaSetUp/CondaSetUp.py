@@ -168,14 +168,17 @@ class DeselectableListWidget(QListWidget):
         item = self.itemAt(event.pos())
         if not item:
             self.clearSelection()
-        super().mousePressEvent(event)
+            self.setCurrentItem(None) 
+        QListWidget.mousePressEvent(self, event)  
 
-class FileManagerWidget(QWidget):
+
+class FileManagerWidget(QDialog):
     def __init__(self):
         super().__init__()
         
         self.user = self.initUser()
         self.currentPath = "/home/"+self.user
+        self.choosePath = "/home/"+self.user
         
         self.directories = self.getWSLDirectories()
         self.initUI()
@@ -224,16 +227,16 @@ class FileManagerWidget(QWidget):
         pathLayout.addWidget(self.pathLabel)
         pathLayout.addStretch(1)  # Ajoute un espace extensible pour pousser le bouton à droite
 
-        self.backButton = QPushButton("Revenir")
+        self.backButton = QPushButton("Back")
         self.backButton.clicked.connect(self.navigateUp)
         pathLayout.addWidget(self.backButton)
 
         mainLayout.addLayout(pathLayout)
 
-        # Liste des dossiers
-        self.dirListWidget = QListWidget()
+        self.dirListWidget = DeselectableListWidget()
         self.dirListWidget.itemDoubleClicked.connect(self.navigateIntoDirectory)
         mainLayout.addWidget(self.dirListWidget)
+
 
         # Layout pour les boutons d'action et la création de dossiers
         actionButtonLayout = QHBoxLayout()
@@ -256,7 +259,7 @@ class FileManagerWidget(QWidget):
         # Ajout du layout de création de dossiers au layout principal
         mainLayout.addLayout(createFolderLayout)
 
-        self.installButton = QPushButton("Install here")
+        self.installButton = QPushButton("Choose this folder")
         self.installButton.clicked.connect(self.installHere)
         actionButtonLayout.addWidget(self.installButton)
 
@@ -328,7 +331,7 @@ class FileManagerWidget(QWidget):
         if newDirName:
             try:
                 subprocess.check_output(["wsl", "--user", "jeanne", "--", "mkdir", self.currentPath+"/"+newDirName])
-                QMessageBox.information(self, "Succès", f"Dossier '{newDirName}' créé avec succès.")
+                # QMessageBox.information(self, "Succès", f"Dossier '{newDirName}' créé avec succès.")
                 self.refreshDirectories()
             except subprocess.CalledProcessError as e:
                 QMessageBox.warning(self, "Erreur", f"Impossible de créer le dossier : {e}")
@@ -342,12 +345,20 @@ class FileManagerWidget(QWidget):
         
 
     def installHere(self):
-        selectedDir = self.dirListWidget.currentItem().text()
-        if selectedDir:
-            QMessageBox.information(self, "Installation", f"Installation dans le dossier : {selectedDir}")
-            # Ajoutez ici le code pour installer votre code dans le dossier sélectionné
+        currentItem = self.dirListWidget.currentItem()
+        if currentItem is not None:
+            selectedDir = currentItem.text()
+            self.choosePath = f"{self.currentPath}/{selectedDir}"
         else:
-            QMessageBox.warning(self, "Erreur", "Veuillez sélectionner un dossier.")
+            self.choosePath = f"{self.currentPath}"
+        print("choosePath : ",self.choosePath)
+        self.close()
+            
+    def getUserName(self):
+        return self.user
+    
+    def getChoosePath(self):
+        return self.choosePath
 
 
 class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
@@ -516,21 +527,12 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         surface_folder=False
         if self.ui.checkBoxWsl.isChecked():
             
-            awk_script_path = self.windows_to_linux_path(os.path.join(os.path.dirname(os.path.realpath(__file__)),'test.awk'))
-            command = f'wsl awk -f {awk_script_path} /etc/passwd'
-            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True)
-            decoded_stdout = result.stdout.decode('utf-8')
-            users = decoded_stdout.strip().split('\n')
-            dialog = UserSelectorDialog(slicer.util.mainWindow())
-            for user in users:
-                dialog.addUser(user)
+            fileManager = FileManagerWidget()
+            fileManager.exec_()
 
-            if dialog.exec_():
-                selected_user = dialog.selectedUser()
-                print("Selected user:", selected_user)
-                self.conda_wsl.setUser(selected_user)
-            # surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder",default_path)
-            surface_folder = f"/home/{selected_user}/miniconda3"
+            surface_folder = fileManager.getChoosePath()
+            user_name = fileManager.getUserName()
+            self.conda_wsl.setUser(user_name)
         else :
             surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
             
@@ -543,21 +545,13 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def chooseInstallFolder(self):
         if self.ui.checkBoxWsl.isChecked():
-            awk_script_path = self.windows_to_linux_path(os.path.join(os.path.dirname(os.path.realpath(__file__)),'test.awk'))
-            command = f'wsl awk -f {awk_script_path} /etc/passwd'
-            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True)
-            decoded_stdout = result.stdout.decode('utf-8')
-            users = decoded_stdout.strip().split('\n')
-            dialog = UserSelectorDialog(slicer.util.mainWindow())
-            for user in users:
-                dialog.addUser(user)
-
-            if dialog.exec_():
-                selected_user = dialog.selectedUser()
-                print("Selected user:", selected_user)
-                self.conda_wsl.setUser(selected_user)
+            fileManager = FileManagerWidget()
+            fileManager.exec_()
             # surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder",default_path)
-            surface_folder = f"/home/{selected_user}"
+            surface_folder = fileManager.getChoosePath()
+            print("surface_folder : ",surface_folder)
+            user_name = fileManager.getUserName()
+            self.conda_wsl.setUser(user_name)
         else : 
             surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
             
@@ -571,8 +565,6 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             original_stdin = sys.stdin
             sys.stdin = DummyFile()
-            # process = multiprocessing.Process(target=self.conda.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
-            # process.start()
             original_stdin = sys.stdin
             sys.stdin = DummyFile()
             if self.ui.checkBoxWsl.isChecked() :
@@ -583,20 +575,6 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             line = "Start"
             self.ui.progressBarInstallation.setHidden(False)
 
-            # while "end" not in line:
-            #     with open(name_file, "r") as fichier:
-            #         line = fichier.read()
-            #     if "end" in line:
-            #         os.remove(name_file)
-            #         break
-            #     else:
-            #         slicer.app.processEvents()
-            #         line.replace("\n","")
-            #         try : 
-            #             self.ui.progressBarInstallation.setValue(int(line))
-            #             self.ui.progressBarInstallation.setFormat(f"{int(line)}%")
-            #         except : 
-            #             pass
                     
             while process.is_alive():
                     with open(name_file, "r") as fichier:
@@ -618,7 +596,14 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if "end" in line:
                 print("line : ",line)
                 os.remove(name_file)
+                
+            folder = self.ui.folderInstallLineEdit.text 
+            if self.ui.checkBoxWsl.isChecked() :
+                self.conda_wsl.setConda(folder+"/miniconda3")
+            else :
+                self.conda.setConda(os.path.join(folder,"miniconda3"))
 
+            self.restoreCondaPath()
 
             sys.stdin = original_stdin
 
@@ -737,8 +722,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         
         print("Let's goooo")
         # print(self.conda_wsl.installConda())
-        fileManager = FileManagerWidget()
-        fileManager.show()
+        
         
         
 
@@ -792,7 +776,7 @@ class CondaSetUpCallWsl():
             
             user = self.getUser()
             print("user : ",user)
-            command = ["wsl", "--user", user, "--" ,"bash", "-c", f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /home/{user}/miniconda.sh && chmod +x /home/{user}/miniconda.sh && bash /home/{user}/miniconda.sh -b -p /home/{user}/miniconda3 && rm /home/{user}/miniconda.sh && echo 'export PATH=\"/home/{user}/miniconda3/bin:\$PATH\"' >> /home/{user}/.bashrc"]
+            command = ["wsl", "--user", user, "--" ,"bash", "-c", f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /home/{user}/miniconda.sh && chmod +x /home/{user}/miniconda.sh && bash /home/{user}/miniconda.sh -b -p {folder}/miniconda3 && rm /home/{user}/miniconda.sh && echo 'export PATH=\"{folder}/miniconda3/bin:\$PATH\"' >> /home/{user}/.bashrc"]
             print("command : ", command)
             
             subprocess.check_call(command)
