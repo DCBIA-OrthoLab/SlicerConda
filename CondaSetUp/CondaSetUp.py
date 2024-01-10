@@ -676,7 +676,11 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.resultDeleteLabel.setHidden(True)
         name = self.ui.deleteLineEdit.text
         if name : 
-            result = self.conda.condaDeleteEnv(name)
+            if self.ui.checkBoxWsl.isChecked():
+                result = self.conda_wsl.condaDeleteEnv(name)
+            else : 
+                result = self.conda.condaDeleteEnv(name)
+                
             self.ui.resultDeleteLabel.setHidden(False)
             if result == "Delete":
                 self.ui.resultDeleteLabel.setText(f"Environment {name} delete succesfully")
@@ -705,9 +709,11 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def testEnv(self):
         self.ui.TestEnvResultlabel.setHidden(True)
         name = self.ui.TestEnvlineEdit.text
-        name = False
         if name :
-            result = self.conda.condaTestEnv(name)
+            if self.ui.checkBoxWsl.isChecked():
+                result = self.conda_wsl.condaTestEnv(name)
+            else : 
+                result = self.conda.condaTestEnv(name)
             self.ui.TestEnvResultlabel.setHidden(False)
             if result == "Path to conda no setup":
                 self.ui.TestEnvResultlabel.setStyleSheet("color: red;")
@@ -724,6 +730,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
         
         print("Let's goooo")
+        print(self.conda_wsl.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py']))
         # print(self.conda_wsl.installConda())
         
         
@@ -800,11 +807,138 @@ class CondaSetUpCallWsl():
         result = subprocess.run(command_to_execute, text=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE,env = slicer.util.startupEnvironment())
         if result.returncode==0:
             print("tt vas bien")
+            self.condaInstallLibEnv(name,list_lib)
         else :
             print("error : ",result.stderr)
             
         if writeProgress : self.writeFile(tempo_file,"100")
         if writeProgress : self.writeFile(tempo_file,"end")
+        
+    def condaInstallLibEnv(self,name,requirements: list[str]):
+        print("requirements : ",requirements)
+        path_activate = self.getActivateExecutable()
+        path_conda = self.getCondaPath()
+        user = self.getUser()
+        if path_activate=="None":
+                return "Path to conda no setup"
+        else :
+            if len(requirements)!=0 :
+               
+                command = f"source {path_activate} {name} && pip install"
+                    
+                for lib in requirements :
+                    command = command+ " "+lib
+                command_to_execute = ["wsl", "--user", user,"--","bash","-c", command]
+                print("command to execute in intsallLib wsl : ",command_to_execute)
+                result = subprocess.run(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment())
+                if result.returncode==0:
+                    print(f"Result : {result.stdout}")
+                    return (f"Result : {result.stdout}")
+                else :
+                    print(f"Error : {result.stderr}")
+                    return (f"Error : {result.stderr}")
+            return "Nothing to install"
+        
+    def condaDeleteEnv(self,name:str):
+        exist = self.condaTestEnv(name)
+        user = self.getUser()
+        if exist:
+            path_conda = self.getCondaExecutable()
+            if path_conda=="None":
+                return "Path to conda no setup"
+            command = f"{path_conda} env remove --name {name}"  
+            command_to_execute = ["wsl", "--user", user,"--","bash","-c", command]
+            print("command_to_execute : ",command_to_execute)
+            result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
+            if result.returncode == 0:
+                return "Delete"
+            else :
+                print(result.stderr)
+                return "Error"
+        return "Not exist"
+    
+    def condaTestEnv(self,name:str)->bool:
+        '''
+        check if the environnement 'name' exist in miniconda3. return bool
+        '''
+
+        path_conda = self.getCondaExecutable()
+        user = self.getUser()
+        if path_conda=="None":
+                return "Path to conda no setup"
+        
+        command = f"{path_conda} info --envs"
+        command_to_execute = ["wsl", "--user", user,"--","bash","-c", command]
+        print("command_to_execute : ",command_to_execute)
+        result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env = slicer.util.startupEnvironment())
+        if result.returncode == 0:
+            output = result.stdout.decode("utf-8")
+            env_lines = output.strip().split("\n")
+
+            for line in env_lines:
+                env_name = line.split()[0].strip()
+                if env_name == name:
+                    return True 
+        return False 
+    
+    def windows_to_linux_path(self,windows_path):
+        '''
+        Convert a windows path to a path that wsl can read
+        '''
+        windows_path = windows_path.strip()
+
+        path = windows_path.replace('\\', '/')
+
+        if ':' in path:
+            drive, path_without_drive = path.split(':', 1)
+            path = "/mnt/" + drive.lower() + path_without_drive
+
+        return path
+    
+    def condaRunFile(self,env_name: str, command: list[str]):
+        path_condaexe = self.getCondaExecutable()
+        path_conda = self.getCondaPath()
+        user = self.getUser()
+        
+        if path_condaexe=="None":
+            return "Path to conda no setup"
+        
+        path_activate = self.getActivateExecutable()
+        if not self.condaTestEnv(env_name) :
+            return "Env doesn't exist"
+        
+        command2 = f"{path_conda} run -n {env_name}"
+        command2 = f"source {path_activate} {env_name} && python3"
+        for com in command : 
+            if "/mnt/" not in com :
+                com = self.windows_to_linux_path(com)
+            command2 = command2 +" "+com
+        command_to_execute = ["wsl", "--user", user,"--","bash","-c", command2]
+        print("command_to_execute : ",command_to_execute)
+            
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
+        if result.returncode == 0:
+            return (f"Result: {result.stdout}")
+        else :
+            return (f"Error: {result.stderr}")
+        
+    def condaRunCommand(self,env_name: str, command: list[str]):
+        path_activate = self.getActivateExecutable()
+        user = self.getUser()
+        if path_activate=="None":
+            return "Path to conda no setup"
+        
+        command_execute = f"source {path_activate} {env_name} &&"
+        for com in command :
+            command_execute = command_execute+ " "+com
+
+        command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
+        print("command_execute dans conda run : ",command_to_execute)
+        result = subprocess.run(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
+        if result.returncode == 0:
+            return (f"Result: {result.stdout}")
+        else :
+            return (f"Error: {result.stderr}")
     
         
     
@@ -867,6 +1001,7 @@ class CondaSetUpCall():
                 if env_name == name:
                     return True 
         return False 
+    
     
     
     def installConda(self,path_install:str,name_tempo:str="tempo.txt",writeProgress:bool=False)->None:
