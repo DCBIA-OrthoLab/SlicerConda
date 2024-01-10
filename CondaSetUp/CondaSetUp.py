@@ -730,7 +730,9 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
         
         print("Let's goooo")
-        print(self.conda_wsl.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py']))
+        print(self.conda_wsl.condaRunFilePython('C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py',name))
+        command = ["python3","/mnt/c/Users/luciacev.UMROOT/Documents/SlicerDentalModelSeg/CrownSegmentation/test.py"]
+        print(self.conda_wsl.condaRunCommand(name,command))
         # print(self.conda_wsl.installConda())
         
         
@@ -757,12 +759,19 @@ class CondaSetUpCallWsl():
         if pathConda:
             self.settings.setValue("condaPath", pathConda)
             self.settings.setValue("conda/executable",self.settings.value("condaPath", "")+"/bin/conda")
+            self.settings.setValue("python3",self.settings.value("condaPath", "")+"/bin/python3")
             self.settings.setValue("activate/executable",pathConda+"/bin/activate")
 
     def getCondaExecutable(self):
         condaExe = self.settings.value("conda/executable", "")
         if condaExe:
             return (condaExe)
+        return "None"
+    
+    def getPythonExecutable(self):
+        python3exe = self.settings.value("python3", "")
+        if python3exe:
+            return (python3exe)
         return "None"
     
     def getUser(self):
@@ -895,46 +904,49 @@ class CondaSetUpCallWsl():
 
         return path
     
-    def condaRunFile(self,env_name: str, command: list[str]):
+    def condaRunFilePython(self, file_path,env_name="None"):
         path_condaexe = self.getCondaExecutable()
         path_conda = self.getCondaPath()
         user = self.getUser()
         
-        if path_condaexe=="None":
-            return "Path to conda no setup"
+        if env_name!="None": 
+            if not self.condaTestEnv(env_name):
+                return (f"Environnement {env_name} doesn't exist")
         
-        path_activate = self.getActivateExecutable()
-        if not self.condaTestEnv(env_name) :
-            return "Env doesn't exist"
-        
-        command2 = f"{path_conda} run -n {env_name}"
-        command2 = f"source {path_activate} {env_name} && python3"
-        for com in command : 
-            if "/mnt/" not in com :
-                com = self.windows_to_linux_path(com)
-            command2 = command2 +" "+com
+        if env_name!="None":
+            python_path = path_conda+"/envs/"+env_name+"/bin/python3"
+        else :
+            python_path = path_conda+"/bin/python3"
+            
+        command2 = f"{python_path}" 
+        if "/mnt/" not in file_path :
+            file_path = self.windows_to_linux_path(file_path)
+        command2 = command2 +" "+file_path
         command_to_execute = ["wsl", "--user", user,"--","bash","-c", command2]
         print("command_to_execute : ",command_to_execute)
             
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
+        result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
         if result.returncode == 0:
             return (f"Result: {result.stdout}")
         else :
             return (f"Error: {result.stderr}")
         
-    def condaRunCommand(self,env_name: str, command: list[str]):
+    def condaRunCommand(self, command: list[str],env_name="None": str):
         path_activate = self.getActivateExecutable()
         user = self.getUser()
         if path_activate=="None":
             return "Path to conda no setup"
         
-        command_execute = f"source {path_activate} {env_name} &&"
+        if env_name == "None":
+            command_execute=""
+        else :
+            command_execute = f"source {path_activate} {env_name} &&"
         for com in command :
             command_execute = command_execute+ " "+com
 
         command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
-        print("command_execute dans conda run : ",command_to_execute)
-        result = subprocess.run(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
+        print("command_to_execute in condaRunCommand : ",command_to_execute)
+        result = subprocess.run(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment())
         if result.returncode == 0:
             return (f"Result: {result.stdout}")
         else :
