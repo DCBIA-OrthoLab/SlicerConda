@@ -416,8 +416,12 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.checkBoxWsl.stateChanged.connect(self.checkboxChangeWsl)
 
         self.ui.checkBoxWsl.setHidden(True)
+        self.ui.checkButton.setHidden(True)
+        self.ui.timeCheck.setHidden(True)
         if platform.system() == "Windows":
             self.ui.checkBoxWsl.setHidden(False)
+            self.ui.checkButton.setHidden(False)
+            self.ui.timeCheck.setHidden(False)
         #Hidden
         self.ui.TestEnvResultlabel.setHidden(True)
         self.ui.progressBarInstallation.setHidden(True)
@@ -931,7 +935,7 @@ class CondaSetUpCallWsl():
         else :
             return (f"Error: {result.stderr}")
         
-    def condaRunCommand(self, command: list[str],env_name="None": str):
+    def condaRunCommand(self, command: list[str],env_name="None"):
         path_activate = self.getActivateExecutable()
         user = self.getUser()
         if path_activate=="None":
