@@ -416,13 +416,13 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.checkBoxWsl.stateChanged.connect(self.checkboxChangeWsl)
 
         self.ui.checkBoxWsl.setHidden(True)
-        self.ui.checkButton.setHidden(True)
-        self.ui.timeCheck.setHidden(True)
+
         if platform.system() == "Windows":
             self.ui.checkBoxWsl.setHidden(False)
-            self.ui.checkButton.setHidden(False)
-            self.ui.timeCheck.setHidden(False)
+
         #Hidden
+        self.ui.timeInstallation.setHidden(True)
+        self.ui.timeCreationEnv.setHidden(True)
         self.ui.TestEnvResultlabel.setHidden(True)
         self.ui.progressBarInstallation.setHidden(True)
         self.ui.CreateEnvprogressBar.setHidden(True)
