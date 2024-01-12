@@ -863,7 +863,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
         
         # print("Let's goooo")
-        # print(self.conda_wsl.condaRunFilePython('C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py',name))
+        # print(self.conda_wsl.condaRunFilePython('C:\\Users\\luciacev.UMROOT\\Documents\\SlicerConda\\CondaSetUp\\test.py','ali_ios',["bonjour","hola","salut"]))
         # command = ["python3","/mnt/c/Users/luciacev.UMROOT/Documents/SlicerDentalModelSeg/CrownSegmentation/test.py"]
         # print(self.conda_wsl.condaRunCommand(name,command))
         # print(self.conda_wsl.installConda())
@@ -987,13 +987,13 @@ class CondaSetUpCallWsl():
         except subprocess.CalledProcessError as e:
             print (f"An error occurred when installing Miniconda on WSL: {e}")
             
-    def condaCreateEnv(self,name,python_version,list_lib,tempo_file="tempo.txt",writeProgress=False):
+    def condaCreateEnv(self,name,python_version,list_lib=[],tempo_file="tempo.txt",writeProgress=False):
         '''
         Creates a new Conda environment with the given name and Python version, and installs specified libraries.
         '''
         user = self.getUser()
         conda_path = self.getCondaExecutable()
-        command_to_execute = ["wsl", "--user", user,"--","bash","-c", f"{conda_path} create -y -n {name} python={python_version}"]
+        command_to_execute = ["wsl", "--user", user,"--","bash","-c", f"{conda_path} create -y -n {name} python={python_version} pip numpy-base"]
         if writeProgress : self.writeFile(tempo_file,"20")
         print("command to execute : ",command_to_execute)
         result = subprocess.run(command_to_execute, text=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE,env = slicer.util.startupEnvironment())
@@ -1093,7 +1093,7 @@ class CondaSetUpCallWsl():
 
         return path
     
-    def condaRunFilePython(self, file_path,env_name="None"):
+    def condaRunFilePython(self, file_path,env_name="None",args=[]):
         '''
         Runs a Python script in a specified Conda environment within WSL.
         '''
@@ -1114,6 +1114,11 @@ class CondaSetUpCallWsl():
         if "/mnt/" not in file_path :
             file_path = self.windows_to_linux_path(file_path)
         command2 = command2 +" "+file_path
+        
+        
+        for arg in args :
+            command2 = command2 +" "+arg
+            
         command_to_execute = ["wsl", "--user", user,"--","bash","-c", command2]
         print("command_to_execute : ",command_to_execute)
             
