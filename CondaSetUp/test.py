@@ -1,11 +1,10 @@
 import sys
 
-
 def salutation(args):
     print('je suis le grand mechant loup')
-    # print(args["mot1"])
-    # print(args["mot2"])
-    # print(args["mot3"])
+    print(args["mot1"])
+    print(args["mot2"])
+    print(args["mot3"])
 
 if __name__ == "__main__":
     
@@ -14,12 +13,12 @@ if __name__ == "__main__":
     print(sys.argv)
 
 
-    # args = {
-    #     "mot1": sys.argv[1],
-    #     "mot2": sys.argv[2],
-    #     "mot3": sys.argv[3]
+    args = {
+        "mot1": sys.argv[1],
+        "mot2": sys.argv[2],
+        "mot3": sys.argv[3]
         
-    # }
-    args = {}
+    }
+    # args = {}
     
     salutation(args)
