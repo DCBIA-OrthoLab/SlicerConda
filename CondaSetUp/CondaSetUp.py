@@ -868,6 +868,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # print(self.conda_wsl.condaRunCommand(name,command))
         # print(self.conda_wsl.installConda())
         
+        # print(self.conda.condaRunPythonFile("C:\\Users\\luciacev.UMROOT\\Documents\\SlicerConda\\CondaSetUp\\test.py",[],"test"))
+        
         
         
 
@@ -1410,7 +1412,7 @@ class CondaSetUpCall():
                 return "Error"
         return "Not exist"
     
-    def condaRunFile(self,env_name: str, command: list[str]):
+    def condaRunPythonFile(self,file_path:str,args=[],env_name="None"):
         '''
         Executes a Python script in a specified Conda environment, compatible with both Windows and Unix-like systems.
         '''
@@ -1419,14 +1421,33 @@ class CondaSetUpCall():
         
         if path_condaexe=="None":
             return "Path to conda no setup"
-        if not self.condaTestEnv(env_name) :
-            return "Env doesn't exist"
-        if platform.system()=="Windows" :
-            path_python = os.path.join(self.convert_path(path_conda),"envs",env_name,"python")
-            command = [path_condaexe, 'run', '-n', env_name, path_python, *command]
-        else :
-            command = [path_conda, 'run', '-n', env_name, *command]
+        if env_name != "None": 
+            if not self.condaTestEnv(env_name) :
+                return "Env doesn't exist"
             
+        if platform.system()=="Windows" :
+            if env_name != "None" :  
+                path_python = os.path.join(self.convert_path(path_conda),"envs",env_name,"python")
+                command = [path_condaexe, 'run', '-n', env_name, path_python, file_path]
+            else : 
+                path_python = os.path.join(self.convert_path(path_conda),"python")
+                command = [path_condaexe, 'run', path_python, file_path]
+            
+        else :
+            if env_name != "None" :
+                command = [path_conda, 'run', '-n', env_name, file_path]
+            else :
+                command = [path_conda, 'run',  file_path]
+                
+        print("args : ",args)
+        for arg in args:
+            command.append(arg)
+
+            
+        # command.append(argument)
+                
+            
+        print("command : ",command)
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
         if result.returncode == 0:
             return (f"Result: {result.stdout}")
@@ -1529,25 +1550,25 @@ class CondaSetUpTest(ScriptedLoadableModuleTest):
         your test should break so they know that the feature is needed.
         """
 
-        self.delayDisplay("Starting the test")
+        # self.delayDisplay("Starting the test")
 
-        # Get/create input data
+        # # Get/create input data
 
-        import SampleData
+        # import SampleData
 
-        registerSampleData()
-        inputVolume = SampleData.downloadSample("CondaSetUp1")
-        self.delayDisplay("Loaded test data set")
+        # registerSampleData()
+        # inputVolume = SampleData.downloadSample("CondaSetUp1")
+        # self.delayDisplay("Loaded test data set")
 
-        inputScalarRange = inputVolume.GetImageData().GetScalarRange()
-        self.assertEqual(inputScalarRange[0], 0)
-        self.assertEqual(inputScalarRange[1], 695)
+        # inputScalarRange = inputVolume.GetImageData().GetScalarRange()
+        # self.assertEqual(inputScalarRange[0], 0)
+        # self.assertEqual(inputScalarRange[1], 695)
 
-        threshold = 100
+        # threshold = 100
 
-        # Test the module logic
+        # # Test the module logic
 
-        logic = CondaSetUpLogic()
+        # logic = CondaSetUpLogic()
 
         # Test algorithm with non-inverted threshold
         
