@@ -23,7 +23,7 @@ import subprocess
 import shutil
 import urllib
 import multiprocessing
-from qt import (QFileDialog,QSettings,QDialogButtonBox,QComboBox,QVBoxLayout,QDialog,QLabel,QWidget,QApplication,QListWidget,QPushButton,QLineEdit,QMessageBox,QHBoxLayout)
+from qt import (QFileDialog,QSettings,QDialogButtonBox,QComboBox,QVBoxLayout,QDialog,QLabel,QWidget,QApplication,QListWidget,QPushButton,QLineEdit,QMessageBox,QHBoxLayout,QTimer)
 import threading
 # from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog
 # from PyQt5.QtCore import QSettings
@@ -373,7 +373,7 @@ class FileManagerWidget(QDialog):
         newDirName = self.newDirNameEdit.text
         if newDirName:
             try:
-                subprocess.check_output(["wsl", "--user", "jeanne", "--", "mkdir", self.currentPath+"/"+newDirName])
+                subprocess.check_output(["wsl", "--user", self.user, "--", "mkdir", self.currentPath+"/"+newDirName])
                 # QMessageBox.information(self, "Succès", f"Dossier '{newDirName}' créé avec succès.")
                 self.refreshDirectories()
             except subprocess.CalledProcessError as e:
@@ -716,6 +716,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.restoreCondaPath()
 
             sys.stdin = original_stdin
+            QTimer.singleShot(10000,lambda: self.hideResultLabel("installMiniconda"))
 
         
     
@@ -794,6 +795,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self.ui.CreateEnvprogressBar.setFormat(f"Path to conda no setup")
                     slicer.util.infoDisplay("Enter a path into 'Miniconda/Anaconda Path'",windowTitle="Can't found conda path")
                 sys.stdin = original_stdin
+                QTimer.singleShot(10000,lambda: self.hideResultLabel("createEnv"))
+                
                 
 
     def deleteEnv(self):
@@ -822,6 +825,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else :
                 self.ui.resultDeleteLabel.setText(f"An error occured")
                 self.ui.resultDeleteLabel.setStyleSheet("color: red;")
+                
+            QTimer.singleShot(10000, lambda:self.hideResultLabel("deleteEnv"))
 
 
 
@@ -859,6 +864,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else : 
                 self.ui.TestEnvResultlabel.setStyleSheet("color: red;")
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
+        QTimer.singleShot(10000,lambda: self.hideResultLabel("testEnv"))
         # print(self.conda.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py'],))
         # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
         
@@ -870,6 +876,23 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         
         # print(self.conda.condaRunPythonFile("C:\\Users\\luciacev.UMROOT\\Documents\\SlicerConda\\CondaSetUp\\test.py",[],"test"))
         
+    def hideResultLabel(self,name_label):
+        """
+        Hides the Result Label or progress bar
+        """
+        if name_label=="testEnv" :
+            self.ui.TestEnvResultlabel.setHidden(True)
+            
+        elif name_label=="deleteEnv":
+            self.ui.resultDeleteLabel.setHidden(True)
+            
+        elif name_label=="createEnv":
+            self.ui.CreateEnvprogressBar.setHidden(True)
+            
+        elif name_label=="installMiniconda":
+            self.ui.progressBarInstallation.setHidden(True)
+            self.ui.timeInstallation.setHidden(True)
+            
         
         
 
