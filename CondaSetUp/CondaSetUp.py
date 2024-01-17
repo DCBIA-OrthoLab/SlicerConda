@@ -875,6 +875,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # print(self.conda_wsl.installConda())
         
         # print(self.conda.condaRunPythonFile("C:\\Users\\luciacev.UMROOT\\Documents\\SlicerConda\\CondaSetUp\\test.py",[],"test"))
+        # print(self.conda.condaRunPythonFile("/home/luciacev/Desktop/SlicerConda/CondaSetUp/test.py",["bonjour","hola","salut"],"test"))
         
     def hideResultLabel(self,name_label):
         """
@@ -1458,9 +1459,11 @@ class CondaSetUpCall():
             
         else :
             if env_name != "None" :
-                command = [path_conda, 'run', '-n', env_name, file_path]
+                path_python = os.path.join(path_conda,"envs",env_name,"bin","python3")
+                command = [path_condaexe, 'run', '-n', env_name,path_python, file_path]
             else :
-                command = [path_conda, 'run',  file_path]
+                path_python = os.path.join(path_conda,"bin","python3")
+                command = [path_condaexe, 'run',  path_python,file_path]
                 
         print("args : ",args)
         for arg in args:
