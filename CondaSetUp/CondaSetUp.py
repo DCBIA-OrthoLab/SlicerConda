@@ -1396,15 +1396,16 @@ class CondaSetUpCall():
         print("requirements : ",requirements)
         path_activate = self.getActivateExecutable()
         path_conda = self.getCondaPath()
+        path_conda_exe = self.getCondaExecutable()
         if path_activate=="None":
                 return "Path to conda no setup"
         else :
             if len(requirements)!=0 :
                 if platform.system()=="Windows":
                     path_pip = os.path.join(self.convert_path(path_conda),"envs",name,"Scripts","pip")
-                    command = f"conda activate {name} && {path_pip} install"
+                    command = f"{path_conda_exe} run pip install"
                 else :
-                    command = f"source {path_activate} {name} && pip install"
+                    command = f"{path_conda_exe} run -n {name} pip install"
                     
                 for lib in requirements :
                     command = command+ " "+lib
@@ -1489,6 +1490,8 @@ class CondaSetUpCall():
             return "Path to conda no setup"
         
         command_execute = f"source {path_activate} {env_name} &&"
+        path_conda_exe = self.getCondaExecutable()
+        command_execute = f"{path_conda_exe} run -n {env_name}"
         for com in command :
             command_execute = command_execute+ " "+com
 
