@@ -40,6 +40,6 @@ Classes for Manipulation: Use ***CondaSetUpCall*** (for Linux and Windows) or **
 | condaCreateEnv | Input : name:str,python_version:str,list_lib:[str],tempo_file="tempo.txt",writeProgress=False<br>Output : None | Input : name:str,python_version:str,list_lib=[str],tempo_file="tempo.txt",writeProgress=False<br>Output : str |
 | condaInstallLibEnv | Input : name:str,requirements: list[str]<br>Output : str | Input : name:str,requirements: list[str]<br>Output : str |
 | condaDeleteEnv | Input : name:str<br>Output : str | Input : name:str<br>Output : str |
-| condaRunPythonFile | Input : file_path:str,args=[str],env_name="None"<br>Output : str | Input : file_path,env_name="None",args=[str]<br>Output : str |
-| condaRunCommand | Input : env_name: str, command: list[str]<br>Output : str | Input : ommand: list[str],env_name="None"<br>Output : str |
+| condaRunFilePython | Input : file_path:str,args=[],env_name="None"<br>Output : str | Input : file_path,env_name="None",args=[]<br>Output : str |
+| condaRunCommand | Input : env_name: str, command: list[str]<br>Output : str | Input : command: list[str],env_name="None"<br>Output : str |
 | getUser | Doesn't exist | Input : None: str<br>Output : str |
