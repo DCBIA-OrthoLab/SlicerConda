@@ -1437,7 +1437,7 @@ class CondaSetUpCall():
                 return "Error"
         return "Not exist"
     
-    def condaRunPythonFile(self,file_path:str,args=[],env_name="None"):
+    def condaRunFilePython(self,file_path:str,args=[],env_name="None"):
         '''
         Executes a Python script in a specified Conda environment, compatible with both Windows and Unix-like systems.
         '''
