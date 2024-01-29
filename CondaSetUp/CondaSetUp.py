@@ -170,19 +170,19 @@ class UserSelectorDialog(QDialog, VTKObservationMixin):
 
     def selectedUser(self):
         return self.comboBox.currentText
-    
+
 class DeselectableListWidget(QListWidget):
     '''
     This class extends the QListWidget to create a list widget with a custom feature: the ability to deselect all items by clicking on an empty area within the widget. 
     When the user clicks on a part of the list widget that does not contain an item, any currently selected items are deselected.
     '''
-    
+
     def mousePressEvent(self, event):
         item = self.itemAt(event.pos())
         if not item:
             self.clearSelection()
-            self.setCurrentItem(None) 
-        QListWidget.mousePressEvent(self, event)  
+            self.setCurrentItem(None)
+        QListWidget.mousePressEvent(self, event)
 
 
 class FileManagerWidget(QDialog):
@@ -192,14 +192,14 @@ class FileManagerWidget(QDialog):
     '''
     def __init__(self):
         super().__init__()
-        
+
         self.user = self.initUser()
         self.currentPath = "/home/"+self.user
         self.choosePath = "/home/"+self.user
-        
+
         self.directories = self.getWSLDirectories()
         self.initUI()
-        
+
     def initUser(self):
         '''
         Determines the current user by running a shell command in WSL and opens a dialog for the user to select their username.
@@ -218,7 +218,7 @@ class FileManagerWidget(QDialog):
             print("Selected user:", selected_user)
             return selected_user
         return None
-    
+
     def windows_to_linux_path(self,windows_path):
             '''
         Convert a windows path to a path that wsl can read
@@ -237,10 +237,10 @@ class FileManagerWidget(QDialog):
         '''
         Sets up the user interface of the file manager, including layout, buttons, and directory list widget.
         '''
-        
-        
+
+
         self.setWindowTitle("Gestionnaire de Fichiers WSL")
-    
+
         # Création du layout principal
         mainLayout = QVBoxLayout()
 
@@ -296,13 +296,13 @@ class FileManagerWidget(QDialog):
         self.refreshDirectories()
         self.refreshBackButtonState()
 
-    
+
     def refreshPathLabel(self):
         '''
         Updates the label showing the current path in the file manager.
         '''
         self.pathLabel.setText(self.currentPath)
-        
+
     def refreshBackButtonState(self):
         '''
         Enables or disables the back button based on the current directory path.
@@ -329,7 +329,7 @@ class FileManagerWidget(QDialog):
                     QMessageBox.warning(self, "Error", f"Can't delete the folder : {e}")
         else:
             QMessageBox.warning(self, "Erreur", "Veuillez sélectionner un dossier à supprimer.")
-    
+
     def getWSLDirectories(self):
         '''
         Retrieves a list of directories in the current WSL path.
@@ -342,12 +342,12 @@ class FileManagerWidget(QDialog):
         except subprocess.CalledProcessError as e:
             error = e.output.decode()
             if "No such file or directory" in error:
-                return [] 
+                return []
             else:
                 print(f"Erreur lors de l'exécution de la commande WSL : {e}")
                 return []
 
-        
+
     def navigateIntoDirectory(self, item):
         '''
         Navigates into the directory selected by the user.
@@ -356,7 +356,7 @@ class FileManagerWidget(QDialog):
         self.refreshPathLabel()
         self.refreshDirectories()
         self.refreshBackButtonState()
-        
+
     def navigateUp(self):
         '''
         Navigates one level up in the directory hierarchy.
@@ -365,7 +365,7 @@ class FileManagerWidget(QDialog):
         self.refreshPathLabel()
         self.refreshDirectories()
         self.refreshBackButtonState()
-        
+
     def createDirectory(self):
         '''
         Creates a new directory with the specified name in the current path.
@@ -388,7 +388,7 @@ class FileManagerWidget(QDialog):
         self.dirListWidget.clear()
         self.dirListWidget.addItems(self.getWSLDirectories())
         self.refreshBackButtonState()
-        
+
 
     def installHere(self):
         '''
@@ -402,13 +402,13 @@ class FileManagerWidget(QDialog):
             self.choosePath = f"{self.currentPath}"
         print("choosePath : ",self.choosePath)
         self.close()
-            
+
     def getUserName(self):
         '''
         Returns the username of the current user.
         '''
         return self.user
-    
+
     def getChoosePath(self):
         '''
         Returns the chosen path for installation.
@@ -455,7 +455,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         self.conda = CondaSetUpCall()
-        
+
         if platform.system() == "Windows" :
             self.conda_wsl = CondaSetUpCallWsl()
 
@@ -490,7 +490,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
-        
+
     def showClickableLinkInfo(self,reason):
         messageBox = QMessageBox()
         messageBox.setWindowTitle("Ubuntu not installed")
@@ -534,7 +534,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 slicer.util.infoDisplay("WSL not install. You can install it here :\nhttps://github.com/DCBIA-OrthoLab/SlicerAutomatedDentalTools/releases/tag/wsl2_windows",windowTitle="WSL not install")
                 self.ui.checkBoxWsl.setChecked(False)
 
-        else : 
+        else :
             self.ui.label_1.setText("Miniconda/Anaconda Path :")
             self.ui.folderInstallLabel.setText("Folder install : ")
             self.ui.installButton.setText("Installation")
@@ -620,7 +620,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         '''
         surface_folder=False
         if self.ui.checkBoxWsl.isChecked():
-            
+
             fileManager = FileManagerWidget()
             fileManager.exec_()
 
@@ -629,12 +629,12 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.conda_wsl.setUser(user_name)
         else :
             surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
-            
+
         self.ui.lineEditPathFolder.setText(surface_folder)
         if surface_folder:
-            if self.ui.checkBoxWsl.isChecked() : 
+            if self.ui.checkBoxWsl.isChecked() :
                 self.conda_wsl.setConda(surface_folder)
-            else : 
+            else :
                 self.conda.setConda(surface_folder)
 
     def chooseInstallFolder(self):
@@ -649,9 +649,9 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             print("surface_folder : ",surface_folder)
             user_name = fileManager.getUserName()
             self.conda_wsl.setUser(user_name)
-        else : 
+        else :
             surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
-            
+
         self.ui.folderInstallLineEdit.setText(surface_folder)
 
     def installMiniconda(self):
@@ -671,7 +671,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             sys.stdin = DummyFile()
             if self.ui.checkBoxWsl.isChecked() :
                 process = threading.Thread(target=self.conda_wsl.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
-            else : 
+            else :
                 process = threading.Thread(target=self.conda.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
             process.start()
             line = "Start"
@@ -679,7 +679,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             start_time = time.time()
             previous_time = time.time()
             current_time = time.time()
-                    
+
             while process.is_alive():
                     with open(name_file, "r") as fichier:
                         line = fichier.read()
@@ -689,23 +689,23 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     else:
                         slicer.app.processEvents()
                         line.replace("\n","")
-                        try : 
+                        try :
                             self.ui.progressBarInstallation.setValue(int(line))
                             self.ui.progressBarInstallation.setFormat(f"{int(line)}%")
-                        except : 
+                        except :
                             pass
                     current_time = time.time()
                     if current_time-previous_time > 0.3 :
-                        previous_time = current_time 
+                        previous_time = current_time
                         self.ui.timeInstallation.setText(f"time : {current_time-start_time:.1f}s")
-                        
+
             with open(name_file, "r") as fichier:
                 line = fichier.read()
             if "end" in line:
                 print("line : ",line)
                 os.remove(name_file)
-                
-            folder = self.ui.folderInstallLineEdit.text 
+
+            folder = self.ui.folderInstallLineEdit.text
             if self.ui.checkBoxWsl.isChecked() :
                 self.conda_wsl.setConda(folder+"/miniconda3")
             else :
@@ -718,9 +718,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             sys.stdin = original_stdin
             QTimer.singleShot(10000,lambda: self.hideResultLabel("installMiniconda"))
 
-        
-    
-    
+
+
     def createEnv(self):
         '''
         Creates a new Conda environment with specified parameters (like Python version and libraries). It updates the progress bar and handles both WSL and non-WSL environments.
@@ -730,9 +729,9 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             python_version = self.ui.lineEditPythonVersion.text
             if python_version :
                 lib_list = self.ui.lineEditLib.text
-                if lib_list : 
+                if lib_list :
                     lib_list = lib_list.split(',')
-                else : 
+                else :
                     lib_list = []
                 print("lib_list : ",lib_list)
                 name_file = "tempo.txt"
@@ -740,7 +739,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 sys.stdin = DummyFile()
                 if self.ui.checkBoxWsl.isChecked() :
                     process = threading.Thread(target=self.conda_wsl.condaCreateEnv, args=(name,"3.9",lib_list,name_file,True,))
-                else : 
+                else :
                     process = threading.Thread(target=self.conda.condaCreateEnv, args=(name,"3.9",lib_list,name_file,True,))
                 with open(name_file, "w") as fichier:
                     fichier.write("0\n")
@@ -768,36 +767,35 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     else:
                         slicer.app.processEvents()
                         line.replace("\n","")
-                        try : 
+                        try :
                             self.ui.CreateEnvprogressBar.setValue(int(line))
                             progress = int(line)
                             self.ui.CreateEnvprogressBar.setFormat(f"{progress}% time : {current_time-start_time:.1f}s")
-                        except : 
+                        except :
                             pass
                     current_time = time.time()
                     if current_time-previous_time > 0.3 :
                         self.ui.CreateEnvprogressBar.setFormat(f"{progress}% time : {current_time-start_time:.1f}s")
                         previous_time = current_time
-                        
-                        
+
+
                 with open(name_file, "r") as fichier:
                         line = fichier.read()
                 if "end" in line:
                     print("line : ",line)
                     os.remove(name_file)
                     work = True
-                    
+
                 if work :
                     self.ui.CreateEnvprogressBar.setValue(100)
                     self.ui.CreateEnvprogressBar.setFormat(f"100%")
-                else : 
+                else :
                     self.ui.CreateEnvprogressBar.setValue(0)
                     self.ui.CreateEnvprogressBar.setFormat(f"Path to conda no setup")
                     slicer.util.infoDisplay("Enter a path into 'Miniconda/Anaconda Path'",windowTitle="Can't found conda path")
                 sys.stdin = original_stdin
                 QTimer.singleShot(10000,lambda: self.hideResultLabel("createEnv"))
-                
-                
+
 
     def deleteEnv(self):
         '''
@@ -805,12 +803,12 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         '''
         self.ui.resultDeleteLabel.setHidden(True)
         name = self.ui.deleteLineEdit.text
-        if name : 
+        if name :
             if self.ui.checkBoxWsl.isChecked():
                 result = self.conda_wsl.condaDeleteEnv(name)
-            else : 
+            else :
                 result = self.conda.condaDeleteEnv(name)
-                
+
             self.ui.resultDeleteLabel.setHidden(False)
             if result == "Delete":
                 self.ui.resultDeleteLabel.setText(f"Environment {name} delete succesfully")
@@ -825,7 +823,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else :
                 self.ui.resultDeleteLabel.setText(f"An error occured")
                 self.ui.resultDeleteLabel.setStyleSheet("color: red;")
-                
+
             QTimer.singleShot(10000, lambda:self.hideResultLabel("deleteEnv"))
 
 
@@ -835,10 +833,10 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         Sets the current Conda path in a line edit, differentiating between WSL and non-WSL environments.
         '''
         if self.ui.checkBoxWsl.isChecked():
-            condaPath = self.conda_wsl.getCondaPath() 
+            condaPath = self.conda_wsl.getCondaPath()
         else :
             condaPath = self.conda.getCondaPath()
-            
+
         self.ui.lineEditPathFolder.setText(condaPath)
 
     def testEnv(self):
@@ -850,7 +848,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if name :
             if self.ui.checkBoxWsl.isChecked():
                 result = self.conda_wsl.condaTestEnv(name)
-            else : 
+            else :
                 result = self.conda.condaTestEnv(name)
             self.ui.TestEnvResultlabel.setHidden(False)
             if result == "Path to conda no setup":
@@ -858,61 +856,59 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.TestEnvResultlabel.setText(f"Path to conda no setup")
                 slicer.util.infoDisplay("Enter a path into 'Miniconda/Anaconda Path'",windowTitle="Can't found conda path")
 
-            elif result : 
+            elif result :
                 self.ui.TestEnvResultlabel.setStyleSheet("color: green;")
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} exists.")
-            else : 
+            else :
                 self.ui.TestEnvResultlabel.setStyleSheet("color: red;")
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
         QTimer.singleShot(10000,lambda: self.hideResultLabel("testEnv"))
+
+        # conda_path =self.conda.getCondaExecutable
         # print(self.conda.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py'],))
         # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
-        
+
         # print("Let's goooo")
         # print(self.conda_wsl.condaRunFilePython('C:\\Users\\luciacev.UMROOT\\Documents\\SlicerConda\\CondaSetUp\\test.py','ali_ios',["bonjour","hola","salut"]))
         # command = ["python3","/mnt/c/Users/luciacev.UMROOT/Documents/SlicerDentalModelSeg/CrownSegmentation/test.py"]
         # print(self.conda_wsl.condaRunCommand(name,command))
         # print(self.conda_wsl.installConda())
-        
+
         # print(self.conda.condaRunPythonFile("C:\\Users\\luciacev.UMROOT\\Documents\\SlicerConda\\CondaSetUp\\test.py",[],"test"))
         # print(self.conda.condaRunPythonFile("/home/luciacev/Desktop/SlicerConda/CondaSetUp/test.py",["bonjour","hola","salut"],"test"))
-        
+
     def hideResultLabel(self,name_label):
         """
         Hides the Result Label or progress bar
         """
         if name_label=="testEnv" :
             self.ui.TestEnvResultlabel.setHidden(True)
-            
+
         elif name_label=="deleteEnv":
             self.ui.resultDeleteLabel.setHidden(True)
-            
+
         elif name_label=="createEnv":
             self.ui.CreateEnvprogressBar.setHidden(True)
-            
+
         elif name_label=="installMiniconda":
             self.ui.progressBarInstallation.setHidden(True)
             self.ui.timeInstallation.setHidden(True)
-            
-        
-        
 
 
 
-        
+
 
 class CondaSetUpCallWsl():
     '''
     class for managing Conda environments within a Windows Subsystem for Linux (WSL) context, including installation, environment creation, deletion, and running Python scripts.
     '''
-    
+
     def __init__(self) -> None:
         '''
         Initializes the class with settings specific to Conda and WSL.
         '''
         self.settings = QSettings("SlicerCondaWSL")
-        
-    
+
     def testWslAvailable(self):
         '''
         Checks if WSL is available on the system.
@@ -924,8 +920,7 @@ class CondaSetUpCallWsl():
             return False
         except FileNotFoundError:
             return False
-   
-        
+
     def testUbuntuAvailable(self):
         '''
         Verifies if Ubuntu is installed on WSL.
@@ -935,22 +930,21 @@ class CondaSetUpCallWsl():
         clean_output = output.replace('\x00', '')  # Enlève tous les octets null
 
         return 'Ubuntu' in clean_output
-        
+
     def getCondaPath(self):
         '''
         Retrieves the stored path of the Conda installation.
         '''
         condaPath = self.settings.value("condaPath", "")
         return condaPath
-    
     def setUser(self,user):
         '''
         Sets the WSL user in the settings.
         '''
-        if user : 
+        if user :
             self.settings.setValue("user", user)
             print("USER : ",user)
-    
+
     def setConda(self,pathConda):
         '''
         Sets the path of the Conda installation and related executables in the settings.
@@ -969,14 +963,14 @@ class CondaSetUpCallWsl():
         if condaExe:
             return (condaExe)
         return "None"
-    
-    
+
+
     def getUser(self):
         '''
         Gets the WSL user from the settings.
         '''
         return self.settings.value("user","")
-    
+
     def getActivateExecutable(self):
         '''
         Provides the path to the Conda 'activate' script.
@@ -985,34 +979,34 @@ class CondaSetUpCallWsl():
         if ActivateExe:
             return (ActivateExe)
         return "None"
-    
+
     def writeFile(self,name_file,text):
         '''
         Writes text to a specified file.
         '''
         with open(name_file, "w") as file:
             file.write(f"{text}\n")
-        
+
     def installConda(self,folder:str,file_name:str="tempo.txt",writeProgress:bool=False):
         '''
         Installs Miniconda in a specified folder in WSL.
         '''
         try:
-            
+
             user = self.getUser()
             print("user : ",user)
             command = ["wsl", "--user", user, "--" ,"bash", "-c", f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /home/{user}/miniconda.sh && chmod +x /home/{user}/miniconda.sh && bash /home/{user}/miniconda.sh -b -p {folder}/miniconda3 && rm /home/{user}/miniconda.sh && echo 'export PATH=\"{folder}/miniconda3/bin:\$PATH\"' >> /home/{user}/.bashrc"]
             print("command : ", command)
-            
+
             subprocess.check_call(command)
             if writeProgress : self.writeFile(file_name,"100")
 
             print ("Miniconda has been successfully installed on WSL.")
             if writeProgress : self.writeFile(file_name,"end")
-            
+
         except subprocess.CalledProcessError as e:
             print (f"An error occurred when installing Miniconda on WSL: {e}")
-            
+
     def condaCreateEnv(self,name,python_version,list_lib=[],tempo_file="tempo.txt",writeProgress=False):
         '''
         Creates a new Conda environment with the given name and Python version, and installs specified libraries.
@@ -1028,10 +1022,10 @@ class CondaSetUpCallWsl():
             self.condaInstallLibEnv(name,list_lib)
         else :
             print("error : ",result.stderr)
-            
+
         if writeProgress : self.writeFile(tempo_file,"100")
         if writeProgress : self.writeFile(tempo_file,"end")
-        
+
     def condaInstallLibEnv(self,name,requirements: list[str]):
         '''
         Installs a list of libraries in a specified Conda environment.
@@ -1044,9 +1038,9 @@ class CondaSetUpCallWsl():
                 return "Path to conda no setup"
         else :
             if len(requirements)!=0 :
-               
+
                 command = f"source {path_activate} {name} && pip install"
-                    
+
                 for lib in requirements :
                     command = command+ " "+lib
                 command_to_execute = ["wsl", "--user", user,"--","bash","-c", command]
@@ -1059,7 +1053,7 @@ class CondaSetUpCallWsl():
                     print(f"Error : {result.stderr}")
                     return (f"Error : {result.stderr}")
             return "Nothing to install"
-        
+
     def condaDeleteEnv(self,name:str):
         '''
         Deletes a specified Conda environment.
@@ -1070,7 +1064,7 @@ class CondaSetUpCallWsl():
             path_conda = self.getCondaExecutable()
             if path_conda=="None":
                 return "Path to conda no setup"
-            command = f"{path_conda} env remove --name {name}"  
+            command = f"{path_conda} env remove --name {name}"
             command_to_execute = ["wsl", "--user", user,"--","bash","-c", command]
             print("command_to_execute : ",command_to_execute)
             result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
@@ -1080,7 +1074,7 @@ class CondaSetUpCallWsl():
                 print(result.stderr)
                 return "Error"
         return "Not exist"
-    
+
     def condaTestEnv(self,name:str)->bool:
         '''
         Checks if a specified Conda environment exists.
@@ -1090,7 +1084,7 @@ class CondaSetUpCallWsl():
         user = self.getUser()
         if path_conda=="None":
                 return "Path to conda no setup"
-        
+
         command = f"{path_conda} info --envs"
         command_to_execute = ["wsl", "--user", user,"--","bash","-c", command]
         print("command_to_execute : ",command_to_execute)
@@ -1102,9 +1096,9 @@ class CondaSetUpCallWsl():
             for line in env_lines:
                 env_name = line.split()[0].strip()
                 if env_name == name:
-                    return True 
-        return False 
-    
+                    return True
+        return False
+
     def windows_to_linux_path(self,windows_path):
         '''
         Converts a Windows file path to a WSL-compatible path.
@@ -1118,7 +1112,7 @@ class CondaSetUpCallWsl():
             path = "/mnt/" + drive.lower() + path_without_drive
 
         return path
-    
+
     def condaRunFilePython(self, file_path,env_name="None",args=[]):
         '''
         Runs a Python script in a specified Conda environment within WSL.
@@ -1126,34 +1120,33 @@ class CondaSetUpCallWsl():
         path_condaexe = self.getCondaExecutable()
         path_conda = self.getCondaPath()
         user = self.getUser()
-        
-        if env_name!="None": 
+
+        if env_name!="None":
             if not self.condaTestEnv(env_name):
                 return (f"Environnement {env_name} doesn't exist")
-        
+
         if env_name!="None":
             python_path = path_conda+"/envs/"+env_name+"/bin/python3"
         else :
             python_path = path_conda+"/bin/python3"
-            
-        command2 = f"{python_path}" 
+
+        command2 = f"{python_path}"
         if "/mnt/" not in file_path :
             file_path = self.windows_to_linux_path(file_path)
         command2 = command2 +" "+file_path
-        
-        
+
         for arg in args :
             command2 = command2 +" "+arg
-            
+
         command_to_execute = ["wsl", "--user", user,"--","bash","-c", command2]
         print("command_to_execute : ",command_to_execute)
-            
+
         result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
         if result.returncode == 0:
             return (f"Result: {result.stdout}")
         else :
             return (f"Error: {result.stderr}")
-        
+
     def condaRunCommand(self, command: list[str],env_name="None"):
         '''
         Executes a command in a specified Conda environment within WSL.
@@ -1162,7 +1155,7 @@ class CondaSetUpCallWsl():
         user = self.getUser()
         if path_activate=="None":
             return "Path to conda no setup"
-        
+
         if env_name == "None":
             command_execute=""
         else :
@@ -1177,9 +1170,7 @@ class CondaSetUpCallWsl():
             return (f"Result: {result.stdout}")
         else :
             return (f"Error: {result.stderr}")
-    
-        
-    
+
 
 class CondaSetUpCall():
     def __init__(self) -> None:
@@ -1187,14 +1178,13 @@ class CondaSetUpCall():
         Initializes the class and sets up QSettings for Conda configurations.
         '''
         self.settings = QSettings("SlicerConda")
-        
+
     def convert_path(self,unix_path):
         '''
         Converts a Unix-style path to a Windows-style path.
         '''
         windows_path = unix_path.replace('/', '\\')
         return windows_path
-    
 
     def setConda(self,pathConda):
         '''
@@ -1205,7 +1195,7 @@ class CondaSetUpCall():
             if platform.system()=="Windows":
                 self.settings.setValue("conda/executable", os.path.join(self.convert_path(pathConda),"Scripts","conda"))
                 self.settings.setValue("activate/executable",os.path.join(self.convert_path(pathConda),"Scripts","activate"))
-            else : 
+            else :
                 self.settings.setValue("conda/executable",os.path.join(self.settings.value("condaPath", ""),"bin","conda"))
                 self.settings.setValue("activate/executable",os.path.join(pathConda,"bin","activate"))
 
@@ -1217,7 +1207,7 @@ class CondaSetUpCall():
         if condaExe:
             return (condaExe)
         return "None"
-    
+
     def getActivateExecutable(self):
         '''
         Gets the path to the Conda 'activate' script from the settings.
@@ -1226,7 +1216,7 @@ class CondaSetUpCall():
         if ActivateExe:
             return (ActivateExe)
         return "None"
-    
+
     def getCondaPath(self):
         '''
         Returns the stored Conda installation path from the settings.
@@ -1235,7 +1225,7 @@ class CondaSetUpCall():
         if condaPath:
             return (condaPath)
         return "None"
-        
+
     def condaTestEnv(self,name:str)->bool:
         '''
        Checks if a specified Conda environment exists and returns a boolean indicating the result.
@@ -1244,7 +1234,7 @@ class CondaSetUpCall():
         path_conda = self.getCondaExecutable()
         if path_conda=="None":
                 return "Path to conda no setup"
-        
+
         command_to_execute = [path_conda, "info", "--envs"]
 
         result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env = slicer.util.startupEnvironment())
@@ -1255,11 +1245,9 @@ class CondaSetUpCall():
             for line in env_lines:
                 env_name = line.split()[0].strip()
                 if env_name == name:
-                    return True 
-        return False 
-    
-    
-    
+                    return True
+        return False
+
     def installConda(self,path_install:str,name_tempo:str="tempo.txt",writeProgress:bool=False)->None:
         '''
         Installs Conda in a specified path, handling different operating systems and architectures, and optionally updates the installation progress.
@@ -1293,15 +1281,15 @@ class CondaSetUpCall():
 
         if not os.path.exists(path_install):
             os.makedirs(path_install)
-        
-        
+
+
         if writeProgress : self.writeFile(name_tempo,"20")
 
         if system == "Windows":
             try:
                 path_install = self.convert_path(path_install)
                 path_exe = os.path.join(os.path.expanduser("~"), "tempo")
-       
+
                 os.makedirs(path_exe, exist_ok=True)
                 # Define paths for the installer and conda executable
                 path_installer = os.path.join(path_exe, filename)
@@ -1310,7 +1298,7 @@ class CondaSetUpCall():
                 urllib.request.urlretrieve(miniconda_url, path_installer)
                 print("Installer downloaded successfully.")
                 print("Installing Miniconda...")
-                
+
                 # Run the Anaconda installer with silent mode
                 print("path_installer : ",path_installer)
                 print("path_install : ",path_install)
@@ -1326,7 +1314,7 @@ class CondaSetUpCall():
                 subprocess.run(f"{path_conda} init cmd.exe", shell=True)
                 print("Miniconda installed successfully.")
                 if writeProgress : self.writeFile(name_tempo,"90")
-                
+
                 try:
                     shutil.rmtree(path_exe)
                     print(f"Dossier {path_exe} et son contenu ont été supprimés avec succès.")
@@ -1338,7 +1326,7 @@ class CondaSetUpCall():
                 print(f"An error occurred: {str(e)}")
                 return False
 
-        else : 
+        else :
             subprocess.run(f"mkdir -p {path_install}",capture_output=True, shell=True)
             if writeProgress : self.writeFile(name_tempo,"30")
             subprocess.run(f"wget --continue --tries=3 {miniconda_url} -O {path_sh}",capture_output=True, shell=True)
@@ -1357,9 +1345,9 @@ class CondaSetUpCall():
             except:
                 print("Le fichier est invalide.")
                 return (False)
-            
+
         if writeProgress : self.writeFile(name_tempo,"end")
-        
+
 
     def writeFile(self,name_file,text):
         '''
@@ -1377,8 +1365,8 @@ class CondaSetUpCall():
                 if writeProgress : self.writeFile(tempo_file,"Path to conda no setup")
         else :
             if writeProgress : self.writeFile(tempo_file,"10")
-            command_to_execute = [path_conda, "create", "--name", name, f"python={python_version}", "-y"] 
-            print("command_to_execute in conda create env : ",command_to_execute) 
+            command_to_execute = [path_conda, "create", "--name", name, f"python={python_version}", "-y"]
+            print("command_to_execute in conda create env : ",command_to_execute)
             result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
 
             if writeProgress : self.writeFile(tempo_file,"40")
@@ -1387,7 +1375,7 @@ class CondaSetUpCall():
 
             if writeProgress : self.writeFile(tempo_file,"100")
             if writeProgress : self.writeFile(tempo_file,"end")
-        
+
 
     def condaInstallLibEnv(self,name,requirements: list[str]):
         '''
@@ -1406,7 +1394,7 @@ class CondaSetUpCall():
                     command = f"{path_conda_exe} run pip install"
                 else :
                     command = f"{path_conda_exe} run -n {name} pip install"
-                    
+
                 for lib in requirements :
                     command = command+ " "+lib
                 result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment())
@@ -1428,7 +1416,7 @@ class CondaSetUpCall():
             path_conda = self.getCondaExecutable()
             if path_conda=="None":
                 return "Path to conda no setup"
-            command_to_execute = [path_conda, "env", "remove","--name", name]  
+            command_to_execute = [path_conda, "env", "remove","--name", name]
             result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
             if result.returncode == 0:
                 return "Delete"
@@ -1436,28 +1424,28 @@ class CondaSetUpCall():
                 print(result.stderr)
                 return "Error"
         return "Not exist"
-    
+
     def condaRunFilePython(self,file_path:str,args=[],env_name="None"):
         '''
         Executes a Python script in a specified Conda environment, compatible with both Windows and Unix-like systems.
         '''
         path_condaexe = self.getCondaExecutable()
         path_conda = self.getCondaPath()
-        
+
         if path_condaexe=="None":
             return "Path to conda no setup"
-        if env_name != "None": 
+        if env_name != "None":
             if not self.condaTestEnv(env_name) :
                 return "Env doesn't exist"
-            
+
         if platform.system()=="Windows" :
-            if env_name != "None" :  
+            if env_name != "None" :
                 path_python = os.path.join(self.convert_path(path_conda),"envs",env_name,"python")
                 command = [path_condaexe, 'run', '-n', env_name, path_python, file_path]
-            else : 
+            else :
                 path_python = os.path.join(self.convert_path(path_conda),"python")
                 command = [path_condaexe, 'run', path_python, file_path]
-            
+
         else :
             if env_name != "None" :
                 path_python = os.path.join(path_conda,"envs",env_name,"bin","python3")
@@ -1465,22 +1453,22 @@ class CondaSetUpCall():
             else :
                 path_python = os.path.join(path_conda,"bin","python3")
                 command = [path_condaexe, 'run',  path_python,file_path]
-                
+
         print("args : ",args)
         for arg in args:
             command.append(arg)
 
-            
+
         # command.append(argument)
-                
-            
+
+
         print("command : ",command)
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
         if result.returncode == 0:
             return (f"Result: {result.stdout}")
         else :
             return (f"Error: {result.stderr}")
-        
+
     def condaRunCommand(self,env_name: str, command: list[str]):
         '''
         Runs a command in a specified Conda environment, handling different operating systems.
@@ -1488,7 +1476,7 @@ class CondaSetUpCall():
         path_activate = self.getActivateExecutable()
         if path_activate=="None":
             return "Path to conda no setup"
-        
+
         command_execute = f"source {path_activate} {env_name} &&"
         path_conda_exe = self.getCondaExecutable()
         command_execute = f"{path_conda_exe} run -n {env_name}"
@@ -1501,12 +1489,12 @@ class CondaSetUpCall():
             return (f"Result: {result.stdout}")
         else :
             return (f"Error: {result.stderr}")
-        
-
-    
 
 
-    
+
+
+
+
 class DummyFile(io.IOBase):
         def close(self):
             pass
@@ -1600,6 +1588,6 @@ class CondaSetUpTest(ScriptedLoadableModuleTest):
         # logic = CondaSetUpLogic()
 
         # Test algorithm with non-inverted threshold
-        
+
 
         self.delayDisplay("Test passed")
