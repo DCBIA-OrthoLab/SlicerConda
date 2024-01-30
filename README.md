@@ -51,4 +51,4 @@ Shapeaxi is a Python library that isn't directly installable in Slicer due to ve
 
 ## Idea for improvements : 
 - Make it available on Mac
-- Create a button o automatically launch a terminal in a specific environnement
+- Create a button to automatically launch a terminal in a specific environment
