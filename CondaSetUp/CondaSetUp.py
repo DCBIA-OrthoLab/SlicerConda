@@ -864,7 +864,13 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
         QTimer.singleShot(10000,lambda: self.hideResultLabel("testEnv"))
 
-        # conda_path =self.conda.getCondaExecutable
+        # conda_path =self.conda.getCondaExecutable()
+        # activate_command = f"{conda_path} activate test && exec $SHELL"
+        # print("activate_command : ",activate_command)
+        # print("os.environ.get('DESKTOP_SESSION') : ",os.environ.get('DESKTOP_SESSION'))
+        # # os.system(f'xterm -e /bin/bash -c "{activate_command}"')
+        # # os.system(f'x-terminal-emulator -e /bin/bash -c "{activate_command}"')
+        # os.system("gnome-terminal -e 'bash -c \"sudo apt-get update; exec bash\"'")
         # print(self.conda.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py'],))
         # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
 
