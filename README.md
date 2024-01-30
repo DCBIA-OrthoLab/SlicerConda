@@ -44,3 +44,11 @@ Classes for Manipulation: Use ***CondaSetUpCall*** (for Linux and Windows) or **
 | condaRunFilePython | Input : file_path:str,args=[],env_name="None"<br>Output : str | Input : file_path,env_name="None",args=[]<br>Output : str |
 | condaRunCommand | Input : env_name: str, command: list[str]<br>Output : str | Input : command: list[str],env_name="None"<br>Output : str |
 | getUser | Doesn't exist | Input : None: str<br>Output : str |
+
+## Why use SlicerConda ? : 
+Here's a scenario in which you could use this extension:  
+Shapeaxi is a Python library that isn't directly installable in Slicer due to version conflicts with existing libraries. One of it's feature is a specialized function for teeth segmentation, essential for certain dental imaging modules. However, leveraging Shapeaxi requires setting it up in a separate environment. This is where SlicerConda could help. For users, it simplifies Miniconda3 installation, allowing them to manage different Python environments on their system. For developers, SlicerConda offers a simple way to create a new environment, install Shapeaxi outside 3D Slicer and integrate it seamlessly into their workflow.
+
+## Idea for improvements : 
+- Make it available on Mac
+- Create a button o automatically launch a terminal in a specific environnement
