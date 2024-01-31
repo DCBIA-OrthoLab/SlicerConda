@@ -526,6 +526,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self.ui.label_3.setStyleSheet("text-decoration: underline;")
                     self.ui.label_6.setText("Delete environment in WSL :")
                     self.ui.label_6.setStyleSheet("text-decoration: underline;")
+                    self.ui.folderInstallLineEdit.setText("")
                 else :
                     slicer.util.infoDisplay("There is no Ubuntu distribution on WSL. You can install it here :\nhttps://github.com/DCBIA-OrthoLab/SlicerAutomatedDentalTools/releases/tag/wsl2_windows",windowTitle="Ubuntu not install")
                     self.ui.checkBoxWsl.setChecked(False)
@@ -544,6 +545,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.label_3.setStyleSheet("text-decoration: underline;")
             self.ui.label_6.setText("Delete environment :")
             self.ui.label_6.setStyleSheet("text-decoration: underline;")
+            self.ui.folderInstallLineEdit.setText("")
         self.restoreCondaPath()
 
 
@@ -628,7 +630,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             user_name = fileManager.getUserName()
             self.conda_wsl.setUser(user_name)
         else :
-            surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
+            slicer_dir = os.path.dirname(slicer.app.slicerHome)
+            surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder",slicer_dir)
 
         self.ui.lineEditPathFolder.setText(surface_folder)
         if surface_folder:
@@ -650,7 +653,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             user_name = fileManager.getUserName()
             self.conda_wsl.setUser(user_name)
         else :
-            surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
+            slicer_dir = os.path.dirname(slicer.app.slicerHome)
+            surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder",slicer_dir)
 
         self.ui.folderInstallLineEdit.setText(surface_folder)
 
