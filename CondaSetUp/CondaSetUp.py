@@ -868,24 +868,6 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.TestEnvResultlabel.setText(f"The environment {name} doesn't exist.")
         QTimer.singleShot(10000,lambda: self.hideResultLabel("testEnv"))
 
-        # conda_path =self.conda.getCondaExecutable()
-        # activate_command = f"{conda_path} activate test && exec $SHELL"
-        # print("activate_command : ",activate_command)
-        # print("os.environ.get('DESKTOP_SESSION') : ",os.environ.get('DESKTOP_SESSION'))
-        # # os.system(f'xterm -e /bin/bash -c "{activate_command}"')
-        # # os.system(f'x-terminal-emulator -e /bin/bash -c "{activate_command}"')
-        # os.system("gnome-terminal -e 'bash -c \"sudo apt-get update; exec bash\"'")
-        # print(self.conda.condaRunFile(name,['C:\\Users\\luciacev.UMROOT\\Documents\\SlicerDentalModelSeg\\CrownSegmentation\\test.py'],))
-        # print(self.conda.condaInstallLibEnv(name,['vtk','rpyc'],))
-
-        # print("Let's goooo")
-        # print(self.conda_wsl.condaRunFilePython('C:\\Users\\luciacev.UMROOT\\Documents\\SlicerConda\\CondaSetUp\\test.py','ali_ios',["bonjour","hola","salut"]))
-        # command = ["python3","/mnt/c/Users/luciacev.UMROOT/Documents/SlicerDentalModelSeg/CrownSegmentation/test.py"]
-        # print(self.conda_wsl.condaRunCommand(name,command))
-        # print(self.conda_wsl.installConda())
-
-        # print(self.conda.condaRunPythonFile("C:\\Users\\luciacev.UMROOT\\Documents\\SlicerConda\\CondaSetUp\\test.py",[],"test"))
-        # print(self.conda.condaRunPythonFile("/home/luciacev/Desktop/SlicerConda/CondaSetUp/test.py",["bonjour","hola","salut"],"test"))
 
     def hideResultLabel(self,name_label):
         """
