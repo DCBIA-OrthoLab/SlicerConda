@@ -1,9 +1,10 @@
 # SlicerConda
+
 This extension is currently not available on Mac.  
 SlicerConda is an extension for efficiently installing and managing Conda environments on Linux, Windows, and Windows Subsystem for Linux (WSL). It simplifies the process of setting up Miniconda and offers straightforward environment management for both users and developers within the Slicer platform.
 
 <p align="center">
-    <img src="screenshot/Screenshot1.png" alt="View extension on Linux" width="500"/>
+    <img src="screenshot/CondaSetUp_icon_big_format.png" alt="View extension on Linux" width="230"/>
 </p>
 
 
