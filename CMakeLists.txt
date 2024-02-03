@@ -4,12 +4,12 @@ project(SlicerConda)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/SlicerConda")
+set(EXTENSION_HOMEPAGE "https://github.com/DCBIA-OrthoLab/SlicerConda/blob/main/README.md")
 set(EXTENSION_CATEGORY "Conda")
-set(EXTENSION_CONTRIBUTORS "Leroux Gaelle (University of Michigan)")
-set(EXTENSION_DESCRIPTION "This extension lets the user configure the conda to be used in Slicer.")
-set(EXTENSION_ICONURL "https://www.example.com/Slicer/Extensions/SlicerConda.png")
-set(EXTENSION_SCREENSHOTURLS "https://www.example.com/Slicer/Extensions/SlicerConda/Screenshots/1.png")
+set(EXTENSION_CONTRIBUTORS "Leroux Gaelle (University of Michigan) Claret Jeanne (University of Michigan) Allemang David (kitware)")
+set(EXTENSION_DESCRIPTION "This extension simplifies conda integration by managing installation path and providing tools for developpers to execute Conda commands.")
+set(EXTENSION_ICONURL "https://raw.githubusercontent.com/DCBIA-OrthoLab/SlicerConda/main/CondaSetUp/Resources/Icons/CondaSetUp.png")
+set(EXTENSION_SCREENSHOTURLS "https://raw.githubusercontent.com/DCBIA-OrthoLab/SlicerConda/main/screenshot/Screenshot2.png")
 set(EXTENSION_DEPENDS "NA") # Specified as a list or "NA" if no dependencies
 
 #-----------------------------------------------------------------------------
