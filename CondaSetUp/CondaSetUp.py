@@ -1446,7 +1446,7 @@ class CondaSetUpCall():
                 path_python = os.path.join(path_conda,"bin","python3")
                 command = [path_condaexe, 'run',  path_python,file_path]
 
-        print("args : ",args)
+        # print("args : ",args)
         for arg in args:
             command.append(arg)
 
@@ -1454,14 +1454,16 @@ class CondaSetUpCall():
         # command.append(argument)
 
 
-        print("command : ",command)
+        # print("command : ",command)
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
         if result.returncode == 0:
+            # print(f"Result: {result.stdout}")
             return (f"Result: {result.stdout}")
         else :
+            # print(f"Error: {result.stderr}")
             return (f"Error: {result.stderr}")
 
-    def condaRunCommand(self,env_name: str, command: list[str]):
+    def condaRunCommand(self,command: list[str],env_name="None"):
         '''
         Runs a command in a specified Conda environment, handling different operating systems.
         '''
@@ -1471,15 +1473,20 @@ class CondaSetUpCall():
 
         command_execute = f"source {path_activate} {env_name} &&"
         path_conda_exe = self.getCondaExecutable()
-        command_execute = f"{path_conda_exe} run -n {env_name}"
+        if env_name != "None":
+            command_execute = f"{path_conda_exe} run -n {env_name}"
+        else :
+            command_execute = f"{path_conda_exe} run"
         for com in command :
             command_execute = command_execute+ " "+com
 
-        print("command_execute dans conda run : ",command_execute)
+        # print("command_execute dans conda run : ",command_execute)
         result = subprocess.run(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
         if result.returncode == 0:
+            # print(f"Result: {result.stdout}")
             return (f"Result: {result.stdout}")
         else :
+            # print(f"Error: {result.stderr}")
             return (f"Error: {result.stderr}")
 
 
