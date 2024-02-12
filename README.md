@@ -50,6 +50,12 @@ Classes for Manipulation: Use ***CondaSetUpCall*** (for Linux and Windows) or **
 Here's a scenario in which you could use this extension:  
 Shapeaxi is a Python library that isn't directly installable in Slicer due to version conflicts with existing libraries. One of it's feature is a specialized function for teeth segmentation, essential for certain dental imaging modules. However, leveraging Shapeaxi requires setting it up in a separate environment. This is where SlicerConda could help. For users, it simplifies Miniconda3 installation, allowing them to manage different Python environments on their system. For developers, SlicerConda offers a simple way to create a new environment, install Shapeaxi outside 3D Slicer and integrate it seamlessly into their workflow.
 
+## SlicerConda example of use: 
+For a practical demonstration of SlicerConda's capabilities, check out a straightforward example [here](https://github.com/GaelleLeroux/SlicerConda/blob/main/Example/Example.py#L265C5-L348C69). This particular module is designed for thresholding an image within a specific Conda environment.  
+- **Environment Verification**:  The module verifies the existence of the required Conda environment and the module needed for image thresholding.
+- **Setup and Installation**: In cases where the environment or module is absent, the module uses SlicerConda to automatically configure the environment. It then installs all the components required to facilitate the image thresholding process.  
+- **Running** : Using SlicerConda, the module executes a python code to threshold an image in a specific Conda environment.
+
 ## Idea for improvements : 
 - Make it available on Mac
 - Create a button to automatically launch a terminal in a specific environment
