@@ -17,7 +17,7 @@ from slicer.parameterNodeWrapper import (
 from slicer import vtkMRMLScalarVolumeNode
 from qt import QFileDialog,QMessageBox
 import time
-from CondaSetUp import  CondaSetUpCall
+from CondaSetUp import  CondaSetUpCall # Calling CondaSetUpCall
 import threading
 
 from functools import partial
@@ -264,7 +264,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onApplyButton(self) -> None:
         """Run processing when user clicks "Apply" button."""
-        conda = CondaSetUpCall()
+        conda = CondaSetUpCall() # Creation of the object
         path_conda = conda.getCondaPath() # Get the conda path to find out if the user has entered it
         if path_conda == "None":
           slicer.util.infoDisplay("Path to conda is no set up. Open the module SlicerConda to do it",windowTitle="Can't found conda path")
@@ -279,7 +279,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
           flag = True
           libs = ["SimpleITK"]
           print(conda.condaRunCommand(["conda info --envs"])) # Example of a conda commande to print all the existing environnement
-          if not conda.condaTestEnv(name_env): # Example of a conda command to print all existing environments
+          if not conda.condaTestEnv(name_env): # Example of a conda command to test the existence of a specific environment
 
             userResponse = slicer.util.confirmYesNoDisplay(f"The environnement {name_env} doesn't exist, do you want to create it ? \nThe libraries {' '.join(lib for lib in libs)} will be installed. ", windowTitle="Env doesn't exist")
             if userResponse :
