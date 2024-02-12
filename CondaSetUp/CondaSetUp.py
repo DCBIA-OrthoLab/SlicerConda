@@ -929,6 +929,7 @@ class CondaSetUpCallWsl():
         '''
         condaPath = self.settings.value("condaPath", "")
         return condaPath
+
     def setUser(self,user):
         '''
         Sets the WSL user in the settings.

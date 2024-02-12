@@ -33,9 +33,9 @@ class Example(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = _("ExampleSlicerConda")  # TODO: make this more human readable by adding spaces
+        self.parent.title = _("Example")  # TODO: make this more human readable by adding spaces
         # TODO: set categories (folders where the module shows up in the module selector)
-        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Examples")]
+        self.parent.categories = ["Slicer Conda"]
         self.parent.dependencies = []  # TODO: add here list of module names that this module requires
         self.parent.contributors = ["John Doe (AnyWare Corp.)"]  # TODO: replace with "Firstname Lastname (Organization)"
         # TODO: update with short description of the module and a link to online module documentation
@@ -265,7 +265,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onApplyButton(self) -> None:
         """Run processing when user clicks "Apply" button."""
         conda = CondaSetUpCall()
-        path_conda = conda.getCondaPath()
+        path_conda = conda.getCondaPath() # Get the conda path to find out if the user has entered it
         if path_conda == "None":
           slicer.util.infoDisplay("Path to conda is no set up. Open the module SlicerConda to do it",windowTitle="Can't found conda path")
         else :
@@ -278,12 +278,12 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
           name_env = "example"
           flag = True
           libs = ["SimpleITK"]
-          print(conda.condaRunCommand(["conda info --envs"]))
-          if not conda.condaTestEnv(name_env):
+          print(conda.condaRunCommand(["conda info --envs"])) # Example of a conda commande to print all the existing environnement
+          if not conda.condaTestEnv(name_env): # Example of a conda command to print all existing environments
 
             userResponse = slicer.util.confirmYesNoDisplay(f"The environnement {name_env} doesn't exist, do you want to create it ? \nThe libraries {' '.join(lib for lib in libs)} will be installed. ", windowTitle="Env doesn't exist")
             if userResponse :
-              process = threading.Thread(target=conda.condaCreateEnv, args=(name_env,"3.9",libs,))
+              process = threading.Thread(target=conda.condaCreateEnv, args=(name_env,"3.9",libs,)) # Example of the creation of a new environment with the installation of a library
               process.start()
 
               while process.is_alive():
@@ -300,7 +300,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.labelInformation.setText(f"The process is finished\ntime: {elapsed_time:.1f}s")
 
           if flag :
-            lis_lib_install = conda.condaRunCommand(['conda','list'],name_env)
+            lis_lib_install = conda.condaRunCommand(['conda','list'],name_env) # Example of a command running in a specific environment (here, return the list of libraries installed in the 'example' environment)
             print(f"The list of librairies in {name_env} is : {lis_lib_install}")
             missing_lib = []
             for lib in libs:
@@ -310,7 +310,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if len(missing_lib) != 0:
                 userResponse = slicer.util.confirmYesNoDisplay(f"The environnement {name_env} exist but the libraries : {' '.join(lib for lib in missing_lib)} are missing, do you want to install them ? ", windowTitle="Env doesn't exist")
                 if userResponse :
-                    process = threading.Thread(target=conda.condaInstallLibEnv, args=(name_env,missing_lib))
+                    process = threading.Thread(target=conda.condaInstallLibEnv, args=(name_env,missing_lib)) # Example of installing certain libraries in a specific environment
                     process.start()
 
                     while process.is_alive():
@@ -331,7 +331,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             arguments = [self.ui.lineEditInput.text,str(self.ui.horizontalSlider.value),os.path.join(self.ui.lineEditOutput.text,(self.ui.lineEditSuffix.text+file_extension))]
             print("args : ",arguments)
 
-            process = threading.Thread(target=conda.condaRunFilePython, args=(file_to_run,arguments,name_env))
+            process = threading.Thread(target=conda.condaRunFilePython, args=(file_to_run,arguments,name_env)) # Example of running a python file with input arguments in a specific environment
             process.start()
             while process.is_alive():
                 slicer.app.processEvents()
