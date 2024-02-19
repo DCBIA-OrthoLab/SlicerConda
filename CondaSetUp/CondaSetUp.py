@@ -18,15 +18,13 @@ import sys
 import io
 import time
 import platform
-# import qt
+
 import subprocess
 import shutil
 import urllib
 import multiprocessing
 from qt import (QFileDialog,QSettings,QDialogButtonBox,QComboBox,QVBoxLayout,QDialog,QLabel,QWidget,QApplication,QListWidget,QPushButton,QLineEdit,QMessageBox,QHBoxLayout,QTimer)
 import threading
-# from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog
-# from PyQt5.QtCore import QSettings
 #
 # CondaSetUp
 #
@@ -173,7 +171,7 @@ class UserSelectorDialog(QDialog, VTKObservationMixin):
 
 class DeselectableListWidget(QListWidget):
     '''
-    This class extends the QListWidget to create a list widget with a custom feature: the ability to deselect all items by clicking on an empty area within the widget. 
+    This class extends the QListWidget to create a list widget with a custom feature: the ability to deselect all items by clicking on an empty area within the widget.
     When the user clicks on a part of the list widget that does not contain an item, any currently selected items are deselected.
     '''
 
@@ -187,7 +185,7 @@ class DeselectableListWidget(QListWidget):
 
 class FileManagerWidget(QDialog):
     '''
-    class that extends QDialog to create a custom file manager for navigating and managing directories within a WSL environment. 
+    class that extends QDialog to create a custom file manager for navigating and managing directories within a WSL environment.
     It includes functionality for navigating directories, creating and deleting directories, and selecting a directory for installation purposes.
     '''
     def __init__(self):
@@ -241,14 +239,12 @@ class FileManagerWidget(QDialog):
 
         self.setWindowTitle("Gestionnaire de Fichiers WSL")
 
-        # Création du layout principal
         mainLayout = QVBoxLayout()
 
-        # Layout pour le chemin courant et le bouton "Revenir"
         pathLayout = QHBoxLayout()
         self.pathLabel = QLabel(self.currentPath)
         pathLayout.addWidget(self.pathLabel)
-        pathLayout.addStretch(1)  # Ajoute un espace extensible pour pousser le bouton à droite
+        pathLayout.addStretch(1)
 
         self.backButton = QPushButton("Back")
         self.backButton.clicked.connect(self.navigateUp)
@@ -260,8 +256,6 @@ class FileManagerWidget(QDialog):
         self.dirListWidget.itemDoubleClicked.connect(self.navigateIntoDirectory)
         mainLayout.addWidget(self.dirListWidget)
 
-
-        # Layout pour les boutons d'action et la création de dossiers
         actionButtonLayout = QHBoxLayout()
 
         self.deleteButton = QPushButton("Delete folder")
@@ -272,27 +266,22 @@ class FileManagerWidget(QDialog):
         self.createDirButton.clicked.connect(self.createDirectory)
         actionButtonLayout.addWidget(self.createDirButton)
 
-        # Layout pour la création de dossiers avec label
         createFolderLayout = QHBoxLayout()
         newFolderLabel = QLabel("Name of the new folder:")
         self.newDirNameEdit = QLineEdit()
         createFolderLayout.addWidget(newFolderLabel)
         createFolderLayout.addWidget(self.newDirNameEdit)
 
-        # Ajout du layout de création de dossiers au layout principal
         mainLayout.addLayout(createFolderLayout)
 
         self.installButton = QPushButton("Choose this folder")
         self.installButton.clicked.connect(self.installHere)
         actionButtonLayout.addWidget(self.installButton)
 
-        # Ajout du layout des boutons au layout principal
         mainLayout.addLayout(actionButtonLayout)
 
-        # Configuration du layout principal
         self.setLayout(mainLayout)
 
-        # Mise à jour de l'interface
         self.refreshDirectories()
         self.refreshBackButtonState()
 
@@ -316,7 +305,7 @@ class FileManagerWidget(QDialog):
         selectedDir = self.dirListWidget.currentItem()
         if selectedDir:
             selectedDirPath = self.currentPath+"/"+selectedDir.text()
-            reply = QMessageBox.question(self, 'Confirmation', 
+            reply = QMessageBox.question(self, 'Confirmation',
                                          f"Are you sure you want to delete this folder : '{selectedDirPath}'?",
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
@@ -374,7 +363,6 @@ class FileManagerWidget(QDialog):
         if newDirName:
             try:
                 subprocess.check_output(["wsl", "--user", self.user, "--", "mkdir", self.currentPath+"/"+newDirName])
-                # QMessageBox.information(self, "Succès", f"Dossier '{newDirName}' créé avec succès.")
                 self.refreshDirectories()
             except subprocess.CalledProcessError as e:
                 QMessageBox.warning(self, "Error", f"Impossible to create the folder : {e}")
@@ -460,6 +448,7 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.conda_wsl = CondaSetUpCallWsl()
 
         self.ui.outputsCollapsibleButton.setText("Installation miniconda3")
+        self.ui.outputsCollapsibleButton.collapsed = True
 
         # Buttons
         self.ui.buttonCondaFolder.connect("clicked(bool)", self.chooseCondaFolder)
@@ -482,33 +471,33 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.progressBarInstallation.setHidden(True)
         self.ui.CreateEnvprogressBar.setHidden(True)
         self.ui.resultDeleteLabel.setHidden(True)
+        self.ui.labelDetectionMac.setHidden(True)
 
         self.ui.lineEditLib.setPlaceholderText('vtk,itk,...')
 
-        # Restaurer le chemin sauvegardé (si disponible)
-        self.restoreCondaPath()
 
-        # Make sure parameter node is initialized (needed for module reload)
-        self.initializeParameterNode()
 
-    def showClickableLinkInfo(self,reason):
-        messageBox = QMessageBox()
-        messageBox.setWindowTitle("Ubuntu not installed")
+        if platform.system() == 'Darwin' :
+            self.detectionMac()
+        else:
+            self.restoreCondaPath()
 
-        # Créer un QLabel avec du texte HTML pour le lien cliquable
-        label = QLabel()
-        if reason == "WSL":
-            label.setText('WSL is not install. You can install it here: '
-                        '<a href="https://github.com/DCBIA-OrthoLab/SlicerAutomatedDentalTools/releases/tag/wsl2_windows">WSL2 Setup</a>')
-        else :
-            label.setText('There is no Ubuntu distribution on WSL. You can install it here: '
-                        '<a href="https://github.com/DCBIA-OrthoLab/SlicerAutomatedDentalTools/releases/tag/wsl2_windows">WSL2 Setup for Ubuntu</a>')
-        label.setOpenExternalLinks(True)  # Permet d'ouvrir les liens dans le navigateur par défaut
-        label.setTextInteractionFlags(Qt.TextBrowserInteraction)  # Active l'interaction avec le texte
+            # Make sure parameter node is initialized (needed for module reload)
+            self.initializeParameterNode()
 
-        # Ajouter le QLabel à la QMessageBox
-        messageBox.layout().addWidget(label, 0, 1)
-        messageBox.exec_()
+    def detectionMac(self):
+        self.ui.labelDetectionMac.setHidden(False)
+
+        self.ui.buttonCondaFolder.setEnabled(False)
+        self.ui.folderInstallButton.setEnabled(False)
+        self.ui.installButton.setEnabled(False)
+        self.ui.TestEnvButton.setEnabled(False)
+        self.ui.CreateEnvButton.setEnabled(False)
+        self.ui.deletePushButton.setEnabled(False)
+
+
+
+
 
     def checkboxChangeWsl(self):
         '''
@@ -919,7 +908,7 @@ class CondaSetUpCallWsl():
         '''
         result = subprocess.run(['wsl', '--list'], capture_output=True, text=True)
         output = result.stdout.encode('utf-16-le').decode('utf-8')
-        clean_output = output.replace('\x00', '')  # Enlève tous les octets null
+        clean_output = output.replace('\x00', '')
 
         return 'Ubuntu' in clean_output
 
@@ -1296,11 +1285,10 @@ class CondaSetUpCall():
                 print("path_installer : ",path_installer)
                 print("path_install : ",path_install)
 
-                # Commande pour une installation silencieuse avec Miniconda
                 install_command = f'"{path_installer}" /InstallationType=JustMe /AddToPath=1 /RegisterPython=0 /S /D={path_install}'
 
                 if writeProgress : self.writeFile(name_tempo,"50")
-                # Exécutez la commande d'installation
+
                 subprocess.run(install_command, shell=True)
 
                 if writeProgress : self.writeFile(name_tempo,"70")
