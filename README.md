@@ -15,11 +15,23 @@ SlicerConda is an extension for efficiently installing and managing Conda enviro
 - Developer Integration: Includes CondaSetUpCall and CondaSetUpCallWsl classes for advanced Conda operations.
 - Script and Command Execution: Enables launching Python scripts and commands in specified Conda environments.
 
+## Why use SlicerConda ? : 
+Here are two scenarios in which you could use this extension, highlighting its benefits for users and developers alike:  
+- **Scenario Introduction**: ShapeAXI, a Python library, cannot be directly installed in Slicer due to version conflicts with existing libraries. Additionally, Pytorch3d, a Python module available exclusively on Linux, poses a challenge for Windows users. To utilize a module dependent on Pytorch3d on Windows, execution within a Conda environment through WSL becomes necessary.
+- **Solution for Users - SlicerConda**:
+    - Simplifies the Miniconda3 installation process on Linux, Windows and WSL.
+    - Enables effortless integration of the Miniconda installation path with 3D Slicer.
+- **Solution for Developers - SlicerConda**:
+    - Provides a straightforward mechanism for creating and managing new environments within 3D Slicer, linking directly to an external Miniconda/Anaconda environment manager.
+    - Allows libraries (ShapeAXI or Pytorch3d in our scenarios) to be installed from 3D Slicer into an external environment, guaranteeing its seamless integration into the development process.
+    - Facilitates the execution of specialized code (in our scenario : utilizing Pytorch3d) or commands (in our scenario : from ShapeAXI) within 3D Slicer, but in an external Conda environment, promoting an efficient and integrated workflow for developers.
+
 ## Using SlicerConda
 ### For Users
-- Setup Conda: Users can indicate to 3D Slicer where Miniconda3 is installed on their computer by choosing the "Select a folder" option in the "Input" section.
-- Installtion of Miniconda3 : Into the 'Installation miniconda' section, the user can choose in which folder he want to install miniconda. After choosing it he can install it by cliking on the button 'Installation'
-- Manage Environments: Through the 'Advanced' section in Slicer, users have the capability to manage their Conda environments. This interface allows for the creation, deletion, and verification of the availability of Conda environments on their system.
+Certain modules may require external execution from Slicer. For this to be feasible, Slicer must be informed of the location of Miniconda/Anaconda on the user's computer. Users have the option to specify the installation path, proceed with the installation if it's not already installed, and manage their environment or conduct tests using advanced options. Here are the specifics:
+- Configuring Conda: In the "Input" section, users can direct 3D Slicer to the Miniconda3 installation location on their computer by utilizing the "Select a folder" feature.
+- Miniconda3 Installation: Within the 'Installation miniconda' area, users can select their preferred installation directory for Miniconda. Following the selection, the installation is initiated by clicking the 'Install' button.
+- Environment Management: The 'Advanced' section in Slicer offers tools for managing Conda environments. This includes options to create, remove, or confirm the presence of Conda environments on the user's device.
 <p align="center">
     <img src="screenshot/Screenshot2.png" alt="View extension on Linux" width="500"/>
 </p>
@@ -47,22 +59,10 @@ Classes for Manipulation: Use ***CondaSetUpCall*** (for Linux and Windows) or **
 | condaRunCommand | Input : env_name: str, command: list[str]<br>Output : str | Input : command: list[str],env_name="None"<br>Output : str |
 | getUser | Doesn't exist | Input : None: str<br>Output : str |
 
-## Why use SlicerConda ? : 
-Here's a scenario in which you could use this extension highlighting the benefits for both users and developers:  
-- **Scenario Introduction**: Shapeaxi, a Python library, cannot be directly installed in Slicer due to version conflicts with existing libraries. It includes a vital feature for teeth segmentation crucial for certain dental imaging modules.
-- **Challenge Faced**: Utilizing Shapeaxi requires setting it up in a separate environment because of its incompatibility with Slicer's current library versions.
-- **Solution for Users - SlicerConda**:
-    - Simplifies installation of Miniconda3 on their systems.
-    - Integrates their Miniconda path directly into 3D Slicer.
-- **Solution for Developers - SlicerConda**:
-    - Facilitates the creation of new environments directly from 3D Slicer to an external environment manager (Miniconda/Anaconda).
-    - Allows Shapeaxi to be installed from 3D Slicer into an external environment, guaranteeing its seamless integration into the development process.
-    - Allows ShapeAxi to be run from 3D Slicer in an external environment, ensuring smooth workflow integration.
-
 
 ## Example of SlicerConda use for developers :
 For a practical demonstration of SlicerConda's capabilities, check out a straightforward example [here](https://github.com/DCBIA-OrthoLab/SlicerConda/blob/main/Example/Example.py#L265C1-L348C69). This particular module is designed for thresholding an image within a specific Conda environment. 
-- **Environment Verification**:  The module verifies the existence of the required Conda environment and the module needed for image thresholding.
+- **Environment Verification**:  The module verify the existence of the required Conda environment and the module needed for image thresholding.
 - **Setup and Installation**: In cases where the environment or module is absent, the module uses SlicerConda,with the user's consent, to automatically configure the environment. It then installs all the components required to facilitate the image thresholding process.  
 - **Running** : Using SlicerConda, the module executes a python code to threshold an image in a specific Conda environment.
 
