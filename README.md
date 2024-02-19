@@ -17,8 +17,9 @@ SlicerConda is an extension for efficiently installing and managing Conda enviro
 
 ## Using SlicerConda
 ### For Users
-- Setup Conda: After Miniconda installation on Linux/Windows/WSL, enter the path to the Miniconda folder.
-- Manage Environments: Utilize SlicerConda's interface to create, delete, or check the existence of Conda environments.
+- Setup Conda: Users can indicate to 3D Slicer where Miniconda3 is installed on their computer by choosing the "Select a folder" option in the "Input" section.
+- Installtion of Miniconda3 : Into the 'Installation miniconda' section, the user can choose in which folder he want to install miniconda. After choosing it he can install it by cliking on the button 'Installation'
+- Manage Environments: Through the 'Advanced' section in Slicer, users have the capability to manage their Conda environments. This interface allows for the creation, deletion, and verification of the availability of Conda environments on their system.
 <p align="center">
     <img src="screenshot/Screenshot2.png" alt="View extension on Linux" width="500"/>
 </p>
