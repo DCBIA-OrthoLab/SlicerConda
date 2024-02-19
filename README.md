@@ -47,13 +47,22 @@ Classes for Manipulation: Use ***CondaSetUpCall*** (for Linux and Windows) or **
 | getUser | Doesn't exist | Input : None: str<br>Output : str |
 
 ## Why use SlicerConda ? : 
-Here's a scenario in which you could use this extension:  
-Shapeaxi is a Python library that isn't directly installable in Slicer due to version conflicts with existing libraries. One of it's feature is a specialized function for teeth segmentation, essential for certain dental imaging modules. However, leveraging Shapeaxi requires setting it up in a separate environment. This is where SlicerConda could help. For users, it simplifies Miniconda3 installation, allowing them to manage different Python environments on their system. For developers, SlicerConda offers a simple way to create a new environment, install Shapeaxi outside 3D Slicer and integrate it seamlessly into their workflow.
+Here's a scenario in which you could use this extension highlighting the benefits for both users and developers:  
+- **Scenario Introduction**: Shapeaxi, a Python library, cannot be directly installed in Slicer due to version conflicts with existing libraries. It includes a vital feature for teeth segmentation crucial for certain dental imaging modules.
+- **Challenge Faced**: Utilizing Shapeaxi requires setting it up in a separate environment because of its incompatibility with Slicer's current library versions.
+- **Solution for Users - SlicerConda**:
+    - Simplifies installation of Miniconda3 on their systems.
+    - Integrates their Miniconda path directly into 3D Slicer.
+- **Solution for Developers - SlicerConda**:
+    - Facilitates the creation of new environments directly from 3D Slicer to an external environment manager (Miniconda/Anaconda).
+    - Allows Shapeaxi to be installed from 3D Slicer into an external environment, guaranteeing its seamless integration into the development process.
+    - Allows ShapeAxi to be run from 3D Slicer in an external environment, ensuring smooth workflow integration.
+
 
 ## Example of SlicerConda use for developers :
 For a practical demonstration of SlicerConda's capabilities, check out a straightforward example [here](https://github.com/DCBIA-OrthoLab/SlicerConda/blob/main/Example/Example.py#L265C1-L348C69). This particular module is designed for thresholding an image within a specific Conda environment. 
 - **Environment Verification**:  The module verifies the existence of the required Conda environment and the module needed for image thresholding.
-- **Setup and Installation**: In cases where the environment or module is absent, the module uses SlicerConda to automatically configure the environment. It then installs all the components required to facilitate the image thresholding process.  
+- **Setup and Installation**: In cases where the environment or module is absent, the module uses SlicerConda,with the user's consent, to automatically configure the environment. It then installs all the components required to facilitate the image thresholding process.  
 - **Running** : Using SlicerConda, the module executes a python code to threshold an image in a specific Conda environment.
 
 ## Idea for improvements : 
