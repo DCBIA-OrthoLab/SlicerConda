@@ -17,20 +17,44 @@
       <string>Inputs</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="checkBoxWsl">
+        <property name="text">
+         <string>WSL</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="labelDetectionMac">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#e01b24;&quot;&gt;This extension is currently not available on Mac, please use a computer with a Windows system or  Linux system&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
       <item row="3" column="0">
        <widget class="QLabel" name="label_1">
+        <property name="toolTip">
+         <string>Where miniconda/anaconda is installed on your computer</string>
+        </property>
         <property name="text">
-         <string>Miniconda/Anaconda Path :</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Path Miniconda/Anaconda :&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QLineEdit" name="lineEditPathFolder"/>
+         <widget class="QLineEdit" name="lineEditPathFolder">
+          <property name="toolTip">
+           <string>Where miniconda/anaconda is installed on your computer</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="buttonCondaFolder">
+          <property name="toolTip">
+           <string>Choose folder where miniconda/anaconda is installed on your computer</string>
+          </property>
           <property name="text">
            <string>Select folder</string>
           </property>
@@ -40,20 +64,6 @@
          <layout class="QHBoxLayout" name="horizontalLayout_6"/>
         </item>
        </layout>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="labelDetectionMac">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#e01b24;&quot;&gt;This extension is currently not available on Mac, please use a computer with a Windows system or  Linux system&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="checkBoxWsl">
-        <property name="text">
-         <string>WSL</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </widget>
@@ -70,16 +80,26 @@
          <layout class="QHBoxLayout" name="horizontalLayout_14">
           <item>
            <widget class="QLabel" name="folderInstallLabel">
+            <property name="toolTip">
+             <string>Where would you like to install miniconda on your computer?</string>
+            </property>
             <property name="text">
              <string>Folder install : </string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="folderInstallLineEdit"/>
+           <widget class="QLineEdit" name="folderInstallLineEdit">
+            <property name="toolTip">
+             <string>Folder where you would like to install miniconda on your computer</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="folderInstallButton">
+            <property name="toolTip">
+             <string>To select the folder in which you wish to install miniconda on your computer</string>
+            </property>
             <property name="text">
              <string>Select folder</string>
             </property>
@@ -110,6 +130,9 @@
               <width>80</width>
               <height>20</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>Button to install miniconda3 into the select folder on your computer</string>
             </property>
             <property name="text">
              <string>Installation</string>
