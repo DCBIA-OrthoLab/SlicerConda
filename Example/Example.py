@@ -263,7 +263,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.applyButton.enabled = False
 
     def onApplyButton(self) -> None:
-        """Run processing when user clicks "Apply" button."""
+        """Run processing when user clicks "Apply" button. This particular module is designed for thresholding an image within a specific Conda environment. """
         conda = CondaSetUpCall() # Creation of the object
         path_conda = conda.getCondaPath() # Get the conda path to find out if the user has entered it
         print("path_conda : ",path_conda)
