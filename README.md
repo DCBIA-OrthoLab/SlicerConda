@@ -17,14 +17,14 @@ SlicerConda is an extension for efficiently installing and managing Conda enviro
 
 ## Why use SlicerConda ? : 
 Here are two scenarios in which you could use this extension, highlighting its benefits for users and developers alike:  
-- **Scenario Introduction**: ShapeAXI, a Python library, cannot be directly installed in Slicer due to version conflicts with existing libraries. Additionally, Pytorch3d, a Python module available exclusively on Linux, poses a challenge for Windows users. To utilize a module dependent on Pytorch3d on Windows, execution within a Conda environment through WSL becomes necessary.
+- **Scenario Introduction**: ShapeAXI, a Python library, cannot be directly installed in Slicer due to version conflicts with existing libraries. Additionally, Pytorch3D, a Python module available exclusively on Linux, poses a challenge for Windows users. To utilize a module dependent on Pytorch3d on Windows, execution within a Conda environment through WSL becomes necessary.
 - **Solution for Users - SlicerConda**:
     - Simplifies the Miniconda3 installation process on Linux, Windows and WSL.
     - Enables effortless integration of the Miniconda installation path with 3D Slicer.
 - **Solution for Developers - SlicerConda**:
     - Provides a straightforward mechanism for creating and managing new environments within 3D Slicer, linking directly to an external Miniconda/Anaconda environment manager.
-    - Allows libraries (ShapeAXI or Pytorch3d in our scenarios) to be installed from 3D Slicer into an external environment, guaranteeing its seamless integration into the development process.
-    - Facilitates the execution of specialized code (in our scenario : utilizing Pytorch3d) or commands (in our scenario : from ShapeAXI) within 3D Slicer, but in an external Conda environment, promoting an efficient and integrated workflow for developers.
+    - Allows libraries (ShapeAXI or Pytorch3D in our scenarios) to be installed from 3D Slicer into an external environment, guaranteeing its seamless integration into the development process.
+    - Facilitates the execution of specialized code (in our scenario : utilizing Pytorch3D) or commands (in our scenario : from ShapeAXI) within 3D Slicer, but in an external Conda environment, promoting an efficient and integrated workflow for developers.
 
 ## Using SlicerConda
 ### For Users
