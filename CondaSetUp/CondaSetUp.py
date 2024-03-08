@@ -1419,12 +1419,13 @@ class CondaSetUpCall():
             if not self.condaTestEnv(env_name) :
                 return "Env doesn't exist"
 
+        file_path = "\""+file_path+"\""
         if platform.system()=="Windows" :
             if env_name != "None" :
-                path_python = os.path.join(self.convert_path(path_conda),"envs",env_name,"python")
+                path_python = "\""+os.path.join(self.convert_path(path_conda),"envs",env_name,"python")+"\""
                 command = [path_condaexe, 'run', '-n', env_name, path_python, file_path]
             else :
-                path_python = os.path.join(self.convert_path(path_conda),"python")
+                path_python = "\""+os.path.join(self.convert_path(path_conda),"python")+"\""
                 command = [path_condaexe, 'run', path_python, file_path]
 
         else :
@@ -1437,7 +1438,7 @@ class CondaSetUpCall():
 
         # print("args : ",args)
         for arg in args:
-            command.append(arg)
+            command.append("\""+str(arg)+"\"")
 
 
         # command.append(argument)
