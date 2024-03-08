@@ -1112,13 +1112,13 @@ class CondaSetUpCallWsl():
         else :
             python_path = path_conda+"/bin/python3"
 
-        command2 = f"{python_path}"
+        command2 = f"\"{python_path}\""
         if "/mnt/" not in file_path :
             file_path = self.windows_to_linux_path(file_path)
-        command2 = command2 +" "+file_path
+        command2 = command2 +" "+"\""+file_path+"\""
 
         for arg in args :
-            command2 = command2 +" "+arg
+            command2 = command2 +" "+"\""+arg+"\""
 
         command_to_execute = ["wsl", "--user", user,"--","bash","-c", command2]
         print("command_to_execute : ",command_to_execute)
