@@ -203,7 +203,7 @@ class FileManagerWidget(QDialog):
         Determines the current user by running a shell command in WSL and opens a dialog for the user to select their username.
         '''
         awk_script_path = self.windows_to_linux_path(os.path.join(os.path.dirname(os.path.realpath(__file__)),'get_users.awk'))
-        command = f'wsl awk -f {awk_script_path} /etc/passwd'
+        command = f'wsl awk -f \"{awk_script_path}\" /etc/passwd'
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True)
         decoded_stdout = result.stdout.decode('utf-8')
         users = decoded_stdout.strip().split('\n')
