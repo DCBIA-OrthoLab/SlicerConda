@@ -1419,6 +1419,7 @@ class CondaSetUpCall():
             if not self.condaTestEnv(env_name) :
                 return "Env doesn't exist"
 
+        
         file_path = "\""+file_path+"\""
         if platform.system()=="Windows" :
             if env_name != "None" :
