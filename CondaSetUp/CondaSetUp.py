@@ -1397,7 +1397,8 @@ class CondaSetUpCall():
             path_conda = self.getCondaExecutable()
             if path_conda=="None":
                 return "Path to conda no setup"
-            command_to_execute = [path_conda, "env", "remove","--name", name]
+            command_to_execute = [path_conda, "env", "remove","--name", name,"-y"]
+            print(command_to_execute)
             result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
             if result.returncode == 0:
                 return "Delete"
