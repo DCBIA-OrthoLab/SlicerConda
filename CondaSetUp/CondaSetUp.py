@@ -1421,7 +1421,8 @@ class CondaSetUpCall():
                 return "Env doesn't exist"
 
         
-        file_path = "\""+file_path+"\""
+        # file_path = "\""+file_path+"\""
+        file_path = file_path
         if platform.system()=="Windows" :
             if env_name != "None" :
                 path_python = "\""+os.path.join(self.convert_path(path_conda),"envs",env_name,"python")+"\""
@@ -1440,19 +1441,20 @@ class CondaSetUpCall():
 
         # print("args : ",args)
         for arg in args:
-            command.append("\""+str(arg)+"\"")
+            # command.append("\""+str(arg)+"\"")
+            command.append(str(arg))
 
 
         # command.append(argument)
 
 
-        # print("command : ",command)
+        print("command in condaRunFilePython : ",command)
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
         if result.returncode == 0:
-            # print(f"Result: {result.stdout}")
+            print(f"Result: {result.stdout}")
             return (f"Result: {result.stdout}")
         else :
-            # print(f"Error: {result.stderr}")
+            print(f"Error: {result.stderr}")
             return (f"Error: {result.stderr}")
 
     def condaRunCommand(self,command: list[str],env_name="None"):
@@ -1472,13 +1474,13 @@ class CondaSetUpCall():
         for com in command :
             command_execute = command_execute+ " "+com
 
-        # print("command_execute dans conda run : ",command_execute)
+        print("command_execute dans conda run : ",command_execute)
         result = subprocess.run(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),executable="/bin/bash")
         if result.returncode == 0:
-            # print(f"Result: {result.stdout}")
+            print(f"Result: {result.stdout}")
             return (f"Result: {result.stdout}")
         else :
-            # print(f"Error: {result.stderr}")
+            print(f"Error: {result.stderr}")
             return (f"Error: {result.stderr}")
 
 
