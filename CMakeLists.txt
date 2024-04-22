@@ -4,7 +4,7 @@ project(SlicerConda)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://github.com/DCBIA-OrthoLab/SlicerConda/blob/main/README.md")
+set(EXTENSION_HOMEPAGE "https://github.com/DCBIA-OrthoLab/SlicerConda#readme")
 set(EXTENSION_CATEGORY "Conda")
 set(EXTENSION_CONTRIBUTORS "Leroux Gaelle (University of Michigan) Claret Jeanne (University of Michigan) Allemang David (kitware)")
 set(EXTENSION_DESCRIPTION "This extension simplifies conda integration by managing installation path and providing tools for developpers to execute Conda commands.")
