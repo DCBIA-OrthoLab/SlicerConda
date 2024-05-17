@@ -25,6 +25,7 @@ import urllib
 import multiprocessing
 from qt import (QFileDialog,QSettings,QDialogButtonBox,QComboBox,QVBoxLayout,QDialog,QLabel,QWidget,QApplication,QListWidget,QPushButton,QLineEdit,QMessageBox,QHBoxLayout,QTimer)
 import threading
+import tempfile
 #
 # CondaSetUp
 #
@@ -201,12 +202,42 @@ class FileManagerWidget(QDialog):
     def initUser(self):
         '''
         Determines the current user by running a shell command in WSL and opens a dialog for the user to select their username.
-        '''
-        awk_script_path = self.windows_to_linux_path(os.path.join(os.path.dirname(os.path.realpath(__file__)),'get_users.awk'))
-        command = f'wsl awk -f \"{awk_script_path}\" /etc/passwd'
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True)
-        decoded_stdout = result.stdout.decode('utf-8')
-        users = decoded_stdout.strip().split('\n')
+        '''       
+        script_content = f"""
+python3 -c 'import CondaSetUp_wsl_utils.test as check; import os; print(os.path.isfile(check.__file__))'
+awk -F ':' '{{{{ if ($3 >= 1000 && $1 != "nobody") printf "%s\\n", $1 }}}}' /etc/passwd
+"""
+
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".sh", mode='w', newline='\n') as temp_script:
+                temp_script.write(script_content.strip())
+                temp_script_path = temp_script.name
+
+            temp_script_path_wsl = self.windows_to_linux_path(temp_script_path)
+            print("temp_script_path_wsl :", temp_script_path_wsl)
+            result = subprocess.run(["wsl", "bash", temp_script_path_wsl], capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                print("Script executed successfully")
+                print("stdout:", result.stdout)
+                # decoded_stdout = result.stdout.decode('utf-8')
+                users = result.stdout.strip().split('\n')
+                print("users : ",users)
+            else:
+                print("Command failed with return code:", result.returncode)
+                print("stdout:", result.stdout)
+                print("stderr:", result.stderr)
+        except subprocess.CalledProcessError as e:
+            print("Failed to execute script:", e)
+            print("Output:", e.output)
+            print("Error:", e.stderr)
+        finally:
+            # Nettoyer le fichier temporaire
+            try:
+                os.remove(temp_script_path)
+            except OSError:
+                pass
+
         dialog = UserSelectorDialog(slicer.util.mainWindow())
         for user in users:
             dialog.addUser(user)
@@ -216,6 +247,7 @@ class FileManagerWidget(QDialog):
             print("Selected user:", selected_user)
             return selected_user
         return None
+    
 
     def windows_to_linux_path(self,windows_path):
             '''
