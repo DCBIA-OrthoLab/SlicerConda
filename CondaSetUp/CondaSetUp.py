@@ -56,77 +56,7 @@ and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR0132
 """)
 
         # Additional initialization step after application startup is complete
-        slicer.app.connect("startupCompleted()", registerSampleData)
 
-
-#
-# Register sample data sets in Sample Data module
-#
-
-
-def registerSampleData():
-    """Add data sets to Sample Data module."""
-    # It is always recommended to provide sample data for users to make it easy to try the module,
-    # but if no sample data is available then this method (and associated startupCompeted signal connection) can be removed.
-
-    import SampleData
-
-    iconsPath = os.path.join(os.path.dirname(__file__), "Resources/Icons")
-
-    # To ensure that the source code repository remains small (can be downloaded and installed quickly)
-    # it is recommended to store data sets that are larger than a few MB in a Github release.
-
-    # CondaSetUp1
-    SampleData.SampleDataLogic.registerCustomSampleDataSource(
-        # Category and sample name displayed in Sample Data module
-        category="CondaSetUp",
-        sampleName="CondaSetUp1",
-        # Thumbnail should have size of approximately 260x280 pixels and stored in Resources/Icons folder.
-        # It can be created by Screen Capture module, "Capture all views" option enabled, "Number of images" set to "Single".
-        thumbnailFileName=os.path.join(iconsPath, "CondaSetUp1.png"),
-        # Download URL and target file name
-        uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95",
-        fileNames="CondaSetUp1.nrrd",
-        # Checksum to ensure file integrity. Can be computed by this command:
-        #  import hashlib; print(hashlib.sha256(open(filename, "rb").read()).hexdigest())
-        checksums="SHA256:998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95",
-        # This node name will be used when the data set is loaded
-        nodeNames="CondaSetUp1",
-    )
-
-    # CondaSetUp2
-    SampleData.SampleDataLogic.registerCustomSampleDataSource(
-        # Category and sample name displayed in Sample Data module
-        category="CondaSetUp",
-        sampleName="CondaSetUp2",
-        thumbnailFileName=os.path.join(iconsPath, "CondaSetUp2.png"),
-        # Download URL and target file name
-        uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-        fileNames="CondaSetUp2.nrrd",
-        checksums="SHA256:1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-        # This node name will be used when the data set is loaded
-        nodeNames="CondaSetUp2",
-    )
-
-
-#
-# CondaSetUpParameterNode
-#
-
-
-@parameterNodeWrapper
-class CondaSetUpParameterNode:
-    """
-    The parameters needed by module.
-
-    inputVolume - The volume to threshold.
-    imageThreshold - The value at which to threshold the input volume.
-    invertThreshold - If true, will invert the threshold.
-    thresholdedVolume - The output volume that will contain the thresholded volume.
-    invertedVolume - The output volume that will contain the inverted thresholded volume.
-    """
-
-    a = 1
 
 
 #
@@ -512,8 +442,6 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             self.restoreCondaPath()
 
-            # Make sure parameter node is initialized (needed for module reload)
-            self.initializeParameterNode()
 
     def detectionMac(self):
         self.ui.labelDetectionMac.setHidden(False)
@@ -575,50 +503,22 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def enter(self) -> None:
         """Called each time the user opens this module."""
         # Make sure parameter node exists and observed
-        self.initializeParameterNode()
+        pass
 
     def exit(self) -> None:
         """Called each time the user opens a different module."""
         # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
-        if self._parameterNode:
-            self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
-            self._parameterNodeGuiTag = None
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+        pass
 
     def onSceneStartClose(self, caller, event) -> None:
         """Called just before the scene is closed."""
         # Parameter node will be reset, do not use it anymore
-        self.setParameterNode(None)
+        pass
 
     def onSceneEndClose(self, caller, event) -> None:
         """Called just after the scene is closed."""
         # If this module is shown while the scene is closed then recreate a new parameter node immediately
-        if self.parent.isEntered:
-            self.initializeParameterNode()
-
-    def initializeParameterNode(self) -> None:
-        """Ensure parameter node exists and observed."""
-        # Parameter node stores all user choices in parameter values, node selections, etc.
-        # so that when the scene is saved and reloaded, these settings are restored.
         pass
-
-
-    def setParameterNode(self, inputParameterNode: Optional[CondaSetUpParameterNode]) -> None:
-        """
-        Set and observe parameter node.
-        Observation is needed because when the parameter node is changed then the GUI must be updated immediately.
-        """
-
-        if self._parameterNode:
-            self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
-        self._parameterNode = inputParameterNode
-        if self._parameterNode:
-            # Note: in the .ui file, a Qt dynamic property called "SlicerParameterName" is set on each
-            # ui element that needs connection.
-            self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
-            self.addObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
-            self._checkCanApply()
 
 
     def windows_to_linux_path(self,windows_path):
@@ -1558,27 +1458,6 @@ class CondaSetUpTest(ScriptedLoadableModuleTest):
         your test should break so they know that the feature is needed.
         """
 
-        # self.delayDisplay("Starting the test")
-
-        # # Get/create input data
-
-        # import SampleData
-
-        # registerSampleData()
-        # inputVolume = SampleData.downloadSample("CondaSetUp1")
-        # self.delayDisplay("Loaded test data set")
-
-        # inputScalarRange = inputVolume.GetImageData().GetScalarRange()
-        # self.assertEqual(inputScalarRange[0], 0)
-        # self.assertEqual(inputScalarRange[1], 695)
-
-        # threshold = 100
-
-        # # Test the module logic
-
-        # logic = CondaSetUpLogic()
-
-        # Test algorithm with non-inverted threshold
 
 
         self.delayDisplay("Test passed")
