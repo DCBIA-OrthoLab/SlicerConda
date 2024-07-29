@@ -695,9 +695,9 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             original_stdin = sys.stdin
             sys.stdin = DummyFile()
             if self.ui.checkBoxWsl.isChecked() :
-                process = threading.Thread(target=self.conda_wsl.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
+                process = threading.Thread(target=self.conda_wsl._installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
             else :
-                process = threading.Thread(target=self.conda.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
+                process = threading.Thread(target=self.conda._installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
             process.start()
             line = "Start"
             self.ui.progressBarInstallation.setHidden(False)
@@ -1001,7 +1001,7 @@ class CondaSetUpCallWsl():
         with open(name_file, "w") as file:
             file.write(f"{text}\n")
 
-    def installConda(self,folder:str,file_name:str="tempo.txt",writeProgress:bool=False):
+    def _installConda(self,folder:str,file_name:str="tempo.txt",writeProgress:bool=False):
         '''
         Installs Miniconda in a specified folder in WSL.
         '''
@@ -1262,7 +1262,7 @@ class CondaSetUpCall():
                     return True
         return False
 
-    def installConda(self,path_install:str,name_tempo:str="tempo.txt",writeProgress:bool=False)->None:
+    def _installConda(self,path_install:str,name_tempo:str="tempo.txt",writeProgress:bool=False)->None:
         '''
         Installs Conda in a specified path, handling different operating systems and architectures, and optionally updates the installation progress.
         '''
