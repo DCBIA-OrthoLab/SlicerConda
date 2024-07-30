@@ -889,11 +889,8 @@ class CondaSetUpCallWsl:
 
     def condaDeleteEnv(self,name:str):
         """Deletes a specified Conda environment."""
-        print(-1)
         exist = self.condaTestEnv(name)
-        print(0)
         user = self.getUser()
-        print(1)
         
         if exist:
             path_conda = self.getCondaExecutable()
