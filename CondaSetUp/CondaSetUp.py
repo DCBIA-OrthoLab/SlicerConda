@@ -889,13 +889,18 @@ class CondaSetUpCallWsl:
 
     def condaDeleteEnv(self,name:str):
         """Deletes a specified Conda environment."""
+        print(-1)
         exist = self.condaTestEnv(name)
+        print(0)
         user = self.getUser()
+        print(1)
+        
         if exist:
             path_conda = self.getCondaExecutable()
             if path_conda=="None":
                 return "Path to conda no setup"
-            command = f"{path_conda} env remove --name {name}"
+            print(2)
+            command = f"{path_conda} env remove -y --name {name}"
             command_to_execute = ["wsl", "--user", user,"--","bash","-c", command]
             print("command_to_execute : ",command_to_execute)
             result = subprocess.run(command_to_execute, capture_output=True, text=True, env=slicer.util.startupEnvironment(), check=False)
