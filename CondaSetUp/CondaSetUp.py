@@ -365,7 +365,7 @@ awk -F ':' '{{{{ if ($3 >= 1000 && $1 != "nobody") printf "%s\\n", $1 }}}}' /etc
             if "No such file or directory" in error:
                 return []
             else:
-                print(f"Erreur lors de l'exécution de la commande WSL : {e}")
+                print(f"An error has occured : {e}")
                 return []
 
 
@@ -1032,7 +1032,7 @@ class CondaSetUpCallWsl():
         print("command to execute : ",command_to_execute)
         result = subprocess.run(command_to_execute, text=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE,env = slicer.util.startupEnvironment())
         if result.returncode==0:
-            print("tt vas bien")
+            print("Execution Successfull")
             self.condaInstallLibEnv(name,list_lib)
         else :
             print("error : ",result.stderr)
@@ -1335,10 +1335,10 @@ class CondaSetUpCall():
 
                 try:
                     shutil.rmtree(path_exe)
-                    print(f"Dossier {path_exe} et son contenu ont été supprimés avec succès.")
+                    print(f"Folder {path_exe} and its contebt has been successfully deleted.")
                     if writeProgress : self.writeFile(name_tempo,"100")
                 except Exception as e:
-                    print(f"Une erreur s'est produite lors de la suppression du dossier : {str(e)}")
+                    print(f"An Error has occured when deleting folder : {str(e)}")
                     return True
             except Exception as e:
                 print(f"An error occurred: {str(e)}")
