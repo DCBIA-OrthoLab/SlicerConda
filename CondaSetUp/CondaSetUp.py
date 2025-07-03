@@ -509,13 +509,10 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
 
-        if platform.system() == 'Darwin' :
-            self.detectionMac()
-        else:
-            self.restoreCondaPath()
+        self.restoreCondaPath()
 
-            # Make sure parameter node is initialized (needed for module reload)
-            self.initializeParameterNode()
+        # Make sure parameter node is initialized (needed for module reload)
+        self.initializeParameterNode()
 
     def detectionMac(self):
         self.ui.labelDetectionMac.setHidden(False)
@@ -675,9 +672,11 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.conda_wsl.setUser(user_name)
         else :
             slicer_dir = os.path.dirname(slicer.app.slicerHome)
-            surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder",slicer_dir)
-
-        self.ui.folderInstallLineEdit.setText(surface_folder)
+            if platform.system() == 'Darwin':
+                surface_folder=os.path.join(slicer_dir, 'Contents', 'lib')
+            else:
+                surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder",slicer_dir)
+            self.ui.folderInstallLineEdit.setText(surface_folder)
 
     def installMiniconda(self):
         '''
@@ -686,7 +685,8 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if os.path.isdir(self.ui.folderInstallLineEdit.text) or self.ui.checkBoxWsl.isChecked():
             self.ui.timeInstallation.setHidden(False)
             self.ui.timeInstallation.setText("time : 0s")
-            name_file = "tempo.txt"
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            name_file = os.path.join(dir_path, "tempo.txt")
             with open(name_file, "w") as fichier:
                     fichier.write("0\n")
 
@@ -1283,6 +1283,11 @@ class CondaSetUpCall():
                 filename = "Miniconda3-latest-Linux-x86_64.sh"
             else:
                 filename = "Miniconda3-latest-Linux-x86.sh"
+        elif system == 'Darwin':
+            if machine ==  "x86_64":
+                filename = "Miniconda3-latest-MacOSX-x86_64.sh"
+            else:
+                filename = "Miniconda3-latest-MacOSX-arm64.sh"
         else:
             raise NotImplementedError(f"Unsupported system: {system} {machine}")
 
@@ -1342,13 +1347,21 @@ class CondaSetUpCall():
         else :
             subprocess.run(f"mkdir -p {path_install}",capture_output=True, shell=True)
             if writeProgress : self.writeFile(name_tempo,"30")
-            subprocess.run(f"wget --continue --tries=3 {miniconda_url} -O {path_sh}",capture_output=True, shell=True)
+            print(f"curl -L --continue-at - --retry 3 {miniconda_url} -o {path_sh}")
+            result = subprocess.run(f"curl -L --continue-at - --retry 3 {miniconda_url} -o {path_sh}", 
+                                capture_output=True, shell=True)
+            print(result.stdout)
+            print(result.stderr)
             if writeProgress : self.writeFile(name_tempo,"50")
             subprocess.run(f"chmod +x {path_sh}",capture_output=True, shell=True)
             if writeProgress : self.writeFile(name_tempo,"60")
 
             try:
-                subprocess.run(f"bash {path_sh} -b -u -p {path_install}",capture_output=True, shell=True)
+                print(f"bash {path_sh} -b -u -p {path_install}")
+                result =subprocess.run(f"bash {path_sh} -b -u -p {path_install}",capture_output=True, shell=True)
+                print(result.stdout)
+                print(result.stderr)
+
                 if writeProgress : self.writeFile(name_tempo,"80")
                 subprocess.run(f"rm -rf {path_sh}",shell=True)
                 if writeProgress : self.writeFile(name_tempo,"90")
@@ -1356,7 +1369,6 @@ class CondaSetUpCall():
                 if writeProgress : self.writeFile(name_tempo,"100")
                 return True
             except:
-                print("Le fichier est invalide.")
                 return (False)
 
         if writeProgress : self.writeFile(name_tempo,"end")
