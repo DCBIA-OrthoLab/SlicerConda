@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import Annotated, Optional
 
@@ -6,7 +5,6 @@ import vtk
 
 import slicer
 from slicer.i18n import tr as _
-from slicer.i18n import translate
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 from slicer.parameterNodeWrapper import (
@@ -15,7 +13,7 @@ from slicer.parameterNodeWrapper import (
 )
 
 from slicer import vtkMRMLScalarVolumeNode
-from qt import QFileDialog,QMessageBox
+from qt import QFileDialog
 import time
 from CondaSetUp import  CondaSetUpCall # Calling CondaSetUpCall
 import threading
@@ -191,7 +189,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
             self.ui.lineEditOutput.setText(surface_folder)
         else :
-            surface_folder = QFileDialog.getOpenFileName(self.parent, 'Open a file', '', 'Image files (*.png *.jpeg *.jpg)')
+            surface_folder = QFileDialog.getOpenFileName(self.parent, "Open a file", "", "Image files (*.png *.jpeg *.jpg)")
             self.ui.lineEditInput.setText(surface_folder)
 
 
@@ -263,7 +261,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.applyButton.enabled = False
 
     def onApplyButton(self) -> None:
-        """Run processing when user clicks "Apply" button. This particular module is designed for thresholding an image within a specific Conda environment. """
+        """Run processing when user clicks "Apply" button. This particular module is designed for thresholding an image within a specific Conda environment."""
         conda = CondaSetUpCall() # Creation of the object
         path_conda = conda.getCondaPath() # Get the conda path to find out if the user has entered it
         print("path_conda : ",path_conda)
@@ -284,7 +282,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             userResponse = slicer.util.confirmYesNoDisplay(f"The environnement {name_env} doesn't exist, do you want to create it ? \nThe libraries {' '.join(lib for lib in libs)} will be installed. ", windowTitle="Env doesn't exist")
             if userResponse :
-              process = threading.Thread(target=conda.condaCreateEnv, args=(name_env,"3.9",libs,)) # Example of the creation of a new environment with the installation of a library
+              process = threading.Thread(target=conda.condaCreateEnv, args=(name_env,"3.9",libs)) # Example of the creation of a new environment with the installation of a library
               process.start()
 
               while process.is_alive():
@@ -301,7 +299,7 @@ class ExampleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.labelInformation.setText(f"The process is finished\ntime: {elapsed_time:.1f}s")
 
           if flag :
-            lis_lib_install = conda.condaRunCommand(['conda','list'],name_env) # Example of a command running in a specific environment (here, return the list of libraries installed in the 'example' environment)
+            lis_lib_install = conda.condaRunCommand(["conda","list"],name_env) # Example of a command running in a specific environment (here, return the list of libraries installed in the 'example' environment)
             print(f"The list of librairies in {name_env} is : {lis_lib_install}")
             missing_lib = []
             for lib in libs:
@@ -390,7 +388,8 @@ class ExampleLogic(ScriptedLoadableModuleLogic):
         # :param imageThreshold: values above/below this threshold will be set to 0
         # :param invert: if True then values above the threshold will be set to 0, otherwise values below are set to 0
         # :param showResult: show output volume in slice viewers
-        # """
+        #
+        """
 
         # if not inputVolume or not outputVolume:
         #     raise ValueError("Input or output volume is invalid")
