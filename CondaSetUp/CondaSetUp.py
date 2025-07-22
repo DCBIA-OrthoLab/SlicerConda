@@ -1009,7 +1009,7 @@ class CondaSetUpCallWsl():
 
             user = self.getUser()
             print("user : ",user)
-            command = ["wsl", "--user", user, "--" ,"bash", "-c", f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /home/{user}/miniconda.sh && chmod +x /home/{user}/miniconda.sh && bash /home/{user}/miniconda.sh -b -p {folder}/miniconda3 && rm /home/{user}/miniconda.sh && echo 'export PATH=\"{folder}/miniconda3/bin:\$PATH\"' >> /home/{user}/.bashrc"]
+            command = ["wsl", "--user", user, "--" ,"bash", "-c", f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /home/{user}/miniconda.sh && chmod +x /home/{user}/miniconda.sh && bash /home/{user}/miniconda.sh -b -p {folder}/miniconda3 && rm /home/{user}/miniconda.sh && echo 'export PATH=\"{folder}/miniconda3/bin:\\$PATH\"' >> /home/{user}/.bashrc"]
             print("command : ", command)
 
             subprocess.check_call(command)
