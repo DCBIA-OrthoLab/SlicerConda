@@ -1366,6 +1366,7 @@ class CondaSetUpCall():
                 subprocess.run(f"rm -rf {path_sh}",shell=True)
                 if writeProgress : self.writeFile(name_tempo,"90")
                 subprocess.run(f"{path_conda} init bash",shell=True)
+                subprocess.run(f"{path_conda} tos accept",shell=True)
                 if writeProgress : self.writeFile(name_tempo,"100")
                 return True
             except:
