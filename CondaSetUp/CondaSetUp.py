@@ -1347,11 +1347,7 @@ class CondaSetUpCall():
         else :
             subprocess.run(f"mkdir -p {path_install}",capture_output=True, shell=True)
             if writeProgress : self.writeFile(name_tempo,"30")
-            print(f"curl -L --continue-at - --retry 3 {miniconda_url} -o {path_sh}")
-            result = subprocess.run(f"curl -L --continue-at - --retry 3 {miniconda_url} -o {path_sh}", 
-                                capture_output=True, shell=True)
-            print(result.stdout)
-            print(result.stderr)
+            urllib.request.urlretrieve(miniconda_url,path_sh)
             if writeProgress : self.writeFile(name_tempo,"50")
             subprocess.run(f"chmod +x {path_sh}",capture_output=True, shell=True)
             if writeProgress : self.writeFile(name_tempo,"60")
