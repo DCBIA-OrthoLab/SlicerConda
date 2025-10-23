@@ -1378,26 +1378,93 @@ class CondaSetUpCall():
         with open(name_file, "w") as file:
             file.write(f"{text}\n")
 
-    def condaCreateEnv(self,name,python_version,list_lib,tempo_file="tempo.txt",writeProgress=False):
-        '''
-        Creates a new Conda environment with a specified Python version and installs a list of libraries, with an option to update progress.
-        '''
+    def condaCreateEnv(self, name, python_version, list_lib, tempo_file="tempo.txt", writeProgress=False):
+        """
+        Crée un env conda à un emplacement connu (prefix) et y installe des libs.
+        Robuste pour Linux/Slicer (évite les surprises de HOME/envs_dirs).
+        """
+        channels = [
+        "https://repo.anaconda.com/pkgs/main",
+        "https://repo.anaconda.com/pkgs/r"
+        ]
+        
         path_conda = self.getCondaExecutable()
-        if path_conda=="None":
-                if writeProgress : self.writeFile(tempo_file,"Path to conda no setup")
-        else :
-            if writeProgress : self.writeFile(tempo_file,"10")
-            command_to_execute = [path_conda, "create", "--name", name, f"python={python_version}", "-y"]
-            print("command_to_execute in conda create env : ",command_to_execute)
-            result = subprocess.run(command_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=slicer.util.startupEnvironment())
+        if not path_conda or path_conda == "None":
+            if writeProgress: self.writeFile(tempo_file, "Path to conda not set up")
+            print("❌ Conda executable not found.")
+            return False
 
-            if writeProgress : self.writeFile(tempo_file,"40")
+        for ch in channels:
+            cmd = [path_conda, "tos", "accept", "--override-channels", "--channel", ch]
+            print("🔧 Accept TOS command:", " ".join(cmd))
+            result = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=slicer.util.startupEnvironment()
+            )
+            if result.returncode == 0:
+                print(f"✅ TOS accepted for {ch}")
+                if writeProgress:
+                    self.writeFile(tempo_file, f"TOS accepted for {ch}")
+            else:
+                print(f"⚠️ Failed to accept TOS for {ch}\n{result.stderr}")
+                if writeProgress:
+                    self.writeFile(tempo_file, f"Failed to accept TOS for {ch}")
 
-            self.condaInstallLibEnv(name,list_lib)
+        miniconda_root = os.path.abspath(os.path.join(os.path.dirname(path_conda), ".."))
+        env_prefix = os.path.join(miniconda_root, "envs", name)
 
-            if writeProgress : self.writeFile(tempo_file,"100")
-            if writeProgress : self.writeFile(tempo_file,"end")
+        os.makedirs(os.path.dirname(env_prefix), exist_ok=True)
 
+        if writeProgress: self.writeFile(tempo_file, "10")
+
+        cmd_create = [
+            path_conda, "create",
+            "-p", env_prefix,      
+            f"python={python_version}",
+            "-y"
+        ]
+        print("🔧 conda create:", " ".join(cmd_create))
+        result = subprocess.run(
+            cmd_create,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            env=slicer.util.startupEnvironment()
+        )
+        if result.returncode != 0:
+            print("❌ create failed:\n", result.stderr or result.stdout)
+            if writeProgress: self.writeFile(tempo_file, "Error creating environment")
+            return False
+
+        if writeProgress: self.writeFile(tempo_file, "40")
+
+        # 2) (facultatif mais utile) test rapide de l'env
+        cmd_test = [path_conda, "run", "-p", env_prefix, "python", "-c", "import sys; print(sys.version)"]
+        test = subprocess.run(cmd_test, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                            env=slicer.util.startupEnvironment())
+        if test.returncode != 0:
+            print("⚠️ test env failed:\n", test.stderr or test.stdout)
+
+        def conda_run_p(args):
+            return subprocess.run(
+                [path_conda, "run", "-p", env_prefix] + args,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                env=slicer.util.startupEnvironment()
+            )
+
+        if list_lib:
+            for pkg in list_lib:
+                r = conda_run_p(["pip", "install", pkg])
+                if r.returncode != 0:
+                    print(f"⚠️ install {pkg} failed:\n", r.stderr or r.stdout)
+
+        if writeProgress:
+            self.writeFile(tempo_file, "100")
+            self.writeFile(tempo_file, "end")
+
+        print(f"✅ Env créé: {env_prefix}")
+        return True
 
     def condaInstallLibEnv(self,name,requirements: list[str]):
         '''
