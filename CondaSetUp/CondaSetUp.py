@@ -679,6 +679,13 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder",slicer_dir)
             self.ui.folderInstallLineEdit.setText(surface_folder)
 
+    def runInstallConda(self,conda,folder,name_file):
+        '''
+        Installs Miniconda and keeps the verdict, which the thread would otherwise drop, so that
+        the path is recorded only when there is a Conda at the end of it.
+        '''
+        self.installSucceeded = bool(conda.installConda(folder,name_file,True))
+
     def installMiniconda(self):
         '''
         Initiates the installation of Miniconda in the selected folder. It handles both WSL and standard environments, displays installation progress, and updates the UI elements accordingly.
@@ -695,10 +702,11 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             sys.stdin = DummyFile()
             original_stdin = sys.stdin
             sys.stdin = DummyFile()
+            self.installSucceeded = False
             if self.ui.checkBoxWsl.isChecked() :
-                process = threading.Thread(target=self.conda_wsl.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
+                process = threading.Thread(target=self.runInstallConda, args=(self.conda_wsl,self.ui.folderInstallLineEdit.text,name_file))
             else :
-                process = threading.Thread(target=self.conda.installConda, args=(self.ui.folderInstallLineEdit.text,name_file,True))
+                process = threading.Thread(target=self.runInstallConda, args=(self.conda,self.ui.folderInstallLineEdit.text,name_file))
             process.start()
             line = "Start"
             self.ui.progressBarInstallation.setHidden(False)
@@ -732,11 +740,17 @@ class CondaSetUpWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 os.remove(name_file)
 
             folder = self.ui.folderInstallLineEdit.text
-            if self.ui.checkBoxWsl.isChecked() :
+            if not self.installSucceeded :
+                # Recording the folder whatever happened is what used to outlive a failed
+                # installation: the path was written, and this Slicer asked Conda nothing more.
+                self.ui.progressBarInstallation.setValue(0)
+                self.ui.progressBarInstallation.setFormat("installation failed")
+                slicer.util.infoDisplay(
+                    f"Miniconda could not be installed in {folder}. The Python console says why, and the recorded path was left untouched.",
+                    windowTitle="Miniconda installation failed")
+            elif self.ui.checkBoxWsl.isChecked() :
                 self.conda_wsl.setConda(folder+"/miniconda3")
             else :
-                # print("os.path.join(folder,miniconda3) : ",os.path.join(folder,"miniconda3"))
-                # self.conda.setConda(os.path.join(folder,"miniconda3"))
                 self.conda.setConda(folder+"/miniconda3")
 
             self.restoreCondaPath()
@@ -1300,9 +1314,12 @@ class CondaSetUpCall():
         '''
         self.settings = revisionSettings("SlicerConda")
         self.prefix = f"SlicerConda/{slicerInstallId()}"
-        if not self.settings.value(self.key("condaPath"), ""):
+        # A path recorded over an installation that never finished names a Conda that cannot run,
+        # and asking only whether a path is written would hand it out for good. What is tested is
+        # the executable, so a Slicer left in that state repairs itself at the next start.
+        if not executableExists(self.settings.value(self.key("conda/executable"), "")):
             self.migrateLegacySettings()
-        if not self.settings.value(self.key("condaPath"), ""):
+        if not executableExists(self.settings.value(self.key("conda/executable"), "")):
             self.discoverInstalledConda()
 
     def key(self,name):
@@ -1318,7 +1335,9 @@ class CondaSetUpCall():
         Conda was set up for that other Slicer and must be chosen again here.
         '''
         legacyPath = QSettings("SlicerConda").value("condaPath", "")
-        if not legacyPath or not os.path.isdir(legacyPath):
+        # An installation whose conda is gone is not worth importing, and a half installed one is
+        # worth less still: it would look like a setting and answer nothing.
+        if not legacyPath or not executableExists(self.condaExecutableIn(legacyPath)):
             return
         slicerHome = os.path.realpath(slicer.app.slicerHome)
         belongsToThisSlicer = os.path.realpath(legacyPath).startswith(slicerHome + os.sep)
@@ -1521,6 +1540,12 @@ class CondaSetUpCall():
                 if writeProgress : self.writeFile(name_tempo,"80")
                 subprocess.run(f"rm -rf {path_sh}",shell=True)
                 if writeProgress : self.writeFile(name_tempo,"90")
+                if result.returncode != 0 or not executableExists(path_conda):
+                    # The installer can stop halfway and leave the prefix standing, packages
+                    # extracted and no entry point. Saying so here is what keeps the caller from
+                    # recording a Conda that cannot run.
+                    print("Miniconda was not installed, no conda executable in ",path_install)
+                    return False
                 subprocess.run(f"{path_conda} init bash",shell=True)
                 subprocess.run(f"{path_conda} tos accept",shell=True)
                 if writeProgress : self.writeFile(name_tempo,"100")
