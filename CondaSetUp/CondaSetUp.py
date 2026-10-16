@@ -965,6 +965,34 @@ def executableExists(path):
     return any(os.path.exists(path + extension) for extension in ("", ".exe", ".bat"))
 
 
+def installerTemporaryDirectory():
+    '''
+    A directory short enough to hold the socket the Miniconda installer opens while extracting.
+
+    The installer puts its scratch inside the prefix, through `TMP`, and extracts the packages in
+    a process pool whose forkserver opens a Unix socket there. A `sun_path` holds 108 bytes,
+    terminator included, and a prefix inside a Slicer installation can already spend 76 of them:
+    the `pymp-xxxxxxxx/listener-xxxxxxxx` under it then overflows by a single byte and nothing is
+    extracted. `TMPDIR`, which Python reads before `TMP` and which the installer never sets, is
+    how that socket moves out of the way without moving the installation itself.
+    '''
+    temporary = tempfile.gettempdir()
+    if len(temporary) + len("/pymp-xxxxxxxx/listener-xxxxxxxx") > 107:
+        return "/tmp"
+    return temporary
+
+
+def installerEnvironment():
+    '''
+    The environment the Miniconda installer runs in: the one Slicer was started from, as for
+    every other call to Conda here, plus a temporary directory its extraction can open a socket
+    in.
+    '''
+    environment = dict(slicer.util.startupEnvironment())
+    environment["TMPDIR"] = installerTemporaryDirectory()
+    return environment
+
+
 class CondaSetUpCallWsl():
     '''
     class for managing Conda environments within a Windows Subsystem for Linux (WSL) context, including installation, environment creation, deletion, and running Python scripts.
@@ -1486,7 +1514,7 @@ class CondaSetUpCall():
 
             try:
                 print(f"bash {path_sh} -b -u -p {path_install}")
-                result =subprocess.run(f"bash {path_sh} -b -u -p {path_install}",capture_output=True, shell=True)
+                result =subprocess.run(f"bash {path_sh} -b -u -p {path_install}",capture_output=True, shell=True, env=installerEnvironment())
                 print(result.stdout)
                 print(result.stderr)
 
